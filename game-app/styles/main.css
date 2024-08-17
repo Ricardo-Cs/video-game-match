@@ -38,3 +38,10 @@ body {
 .cell-O {
     color: blue;
 }
+
+.autocomplete-active {
+    background-color: #d4d4d4;
+    /* Cor de fundo da sugestão ativa */
+    color: #000;
+    /* Cor do texto da sugestão ativa */
+}
