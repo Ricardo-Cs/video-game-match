@@ -2,34 +2,40 @@ const input = document.querySelector('#search');
 const form = document.querySelector('#searchForm');
 
 let suggestions = []; // Inicialmente vazio, será preenchido com os nomes dos jogos retornados pela API
+let debounceTimeout;
 
 input.addEventListener('input', (e) => {
     e.preventDefault();
-    const inputValue = input.value;
+    clearTimeout(debounceTimeout);
 
-    // Fechar quaisquer listas de sugestões abertas anteriormente
-    closeAllLists();
+    debounceTimeout = setTimeout(() => {
+        const inputValue = input.value;
 
-    if (!inputValue) return false;
+        // Fechar quaisquer listas de sugestões abertas anteriormente
+        closeAllLists();
 
-    // Fazer a requisição à API
-    fetch(`http://localhost:3333/game/search/${inputValue}`)
-        .then(response => response.json())
-        .then(data => {
-            // Limpar o array de sugestões antes de preencher com novos dados
-            suggestions = [];
+        if (!inputValue) return false;
 
-            // Processar a lista de jogos retornada
-            data.results.forEach(game => {
-                suggestions.push(game.name);
+        // Fazer a requisição à API
+        fetch(`http://localhost:3333/game/search/${inputValue}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log(data)
+                // Limpar o array de sugestões antes de preencher com novos dados
+                suggestions = [];
+
+                // Processar a lista de jogos retornada
+                data.results.forEach(game => {
+                    suggestions.push(game.name);
+                });
+
+                // Gerar a lista de sugestões
+                generateSuggestions(inputValue);
+            })
+            .catch(error => {
+                console.error('Erro:', error);
             });
-
-            // Gerar a lista de sugestões
-            generateSuggestions(inputValue);
-        })
-        .catch(error => {
-            console.error('Erro:', error);
-        });
+    }, 300); // Ajuste o tempo de debounce conforme necessário
 });
 
 function generateSuggestions(inputValue) {
