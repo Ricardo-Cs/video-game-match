@@ -22,9 +22,13 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2em;
+    font-size: 1em;
     cursor: pointer;
     font-weight: bold;
+}
+
+.category-cell {
+    background-color: #d4d4d4;
 }
 
 .logo-cell {
