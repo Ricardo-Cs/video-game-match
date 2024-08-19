@@ -46,7 +46,7 @@
             }
         },
         {
-            "name": "Plataforma: Steam",
+            "name": "Jogo da Steam",
             "type": "platform",
             "condition": {
                 "field": "platform",
@@ -55,12 +55,21 @@
             }
         },
         {
-            "name": "Plataforma: PlayStation",
+            "name": "Jogo de PlayStation",
             "type": "platform",
             "condition": {
                 "field": "platform",
                 "operator": "includes",
                 "value": "PlayStation"
+            }
+        },
+        {
+            "name": "Jogo Mobile",
+            "type": "platform",
+            "condition": {
+                "field": "platform",
+                "operator": "includes",
+                "value": "Mobile"
             }
         },
         {

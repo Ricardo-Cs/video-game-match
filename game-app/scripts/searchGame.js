@@ -38,6 +38,12 @@ input.addEventListener('input', (e) => {
 });
 
 function generateSuggestions(inputValue) {
+    // Verifica se já existe uma div de sugestões, se sim, remove-a
+    const existingListContainer = document.querySelector('.autocomplete-items');
+    if (existingListContainer) {
+        existingListContainer.remove();
+    }
+
     const listContainer = document.createElement('div');
     listContainer.setAttribute('class', 'autocomplete-items');
     input.parentNode.appendChild(listContainer);
@@ -54,7 +60,7 @@ function generateSuggestions(inputValue) {
                 input.value = suggestion;
                 const selectedGuid = suggestions[suggestion];
                 closeAllLists();
-                form.submit()
+                form.submit();
             });
 
             listContainer.appendChild(item);
