@@ -1,3 +1,5 @@
+import { getCategoriesByCellIndex, lastClickedCellIndex, submitForm } from "./gameLogic.js";
+
 const input = document.querySelector('#search');
 const form = document.querySelector('#searchForm');
 
@@ -60,7 +62,8 @@ function generateSuggestions(inputValue) {
                 input.value = suggestion;
                 const selectedGuid = suggestions[suggestion];
                 closeAllLists();
-                form.submit();
+                let associatedCategories = getCategoriesByCellIndex(lastClickedCellIndex)
+                submitForm(selectedGuid, associatedCategories)
             });
 
             listContainer.appendChild(item);

@@ -17,5 +17,5 @@ export const searchGameController = async (req: Request, res: Response) => {
 }
 
 export const verifyAnswerController = async (req: Request, res: Response) => {
-    res.json('Verificado');
+    res.json({ dados: req.body, answer: false });
 }

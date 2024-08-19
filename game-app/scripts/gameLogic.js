@@ -5,7 +5,7 @@ const cancellButton = document.querySelector('.cancel-button');
 const searchDescription = document.querySelector('#searchForm .description');
 const searchInput = document.querySelector('#search');
 
-let lastClickedCellIndex = null; // Variável para armazenar o índice da última célula clicada
+export let lastClickedCellIndex = null; // Variável para armazenar o índice da última célula clicada
 
 // Event Listeners e chamada de funções
 gameCells.forEach((cell) => {
@@ -43,9 +43,13 @@ function hideAndShowSearchBox(event) {
         searchInput.focus();
         lastClickedCellIndex = cellIndex; // Atualiza a célula clicada
     }
+    let associatedCategories = getCategoriesByCellIndex(cellIndex)
+    searchDescription.textContent = `Ache um ${associatedCategories[0].name} e um ${associatedCategories[1].name}`
+}
 
+export function getCategoriesByCellIndex(index) {
     let associatedCategories = [];
-    switch (cellIndex) {
+    switch (index) {
         case 0:
             associatedCategories = [0, 3];
             break;
@@ -77,8 +81,47 @@ function hideAndShowSearchBox(event) {
             break;
     }
     const categories = JSON.parse(sessionStorage.getItem('gameCategories'));
-    associatedCategories = [categories[associatedCategories[0]], categories[associatedCategories[1]]]
-    searchDescription.textContent = `Ache um ${associatedCategories[0].name} e um ${associatedCategories[1].name}`
+    return associatedCategories = [categories[associatedCategories[0]], categories[associatedCategories[1]]]
+}
 
-    console.log(associatedCategories)
+export function submitForm(guid, categories) {
+    // Define a URL para onde a requisição será enviada
+    const url = 'http://localhost:3333/game/verifyAnswer';
+
+    // Prepara os dados a serem enviados no corpo da requisição
+    const requestBody = {
+        guid: guid,
+        categories: categories
+    };
+
+    // Faz a requisição POST com os dados no corpo
+    fetch(url, {
+        method: 'POST', // Define o método HTTP como POST
+        headers: {
+            'Content-Type': 'application/json' // Define o tipo de conteúdo como JSON
+        },
+        body: JSON.stringify(requestBody) // Converte o corpo da requisição para JSON
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json(); // Converte a resposta para JSON
+        })
+        .then(data => {
+            // Verifica o valor do dado "answer" na resposta
+            verifyAnswer(data.answer);
+        })
+        .catch(error => {
+            console.error('Error:', error); // Lida com erros
+        });
+}
+
+function verifyAnswer(answer) {
+    searchContainer.style.display = "none";
+    if (answer) {
+        alert('Acertou!')
+    } else {
+        alert('Errou!');
+    }
 }
