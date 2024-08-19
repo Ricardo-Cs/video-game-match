@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap');
+
 * {
     margin: 0;
     padding: 0;
@@ -5,31 +7,32 @@
 }
 
 body {
+    font-family: 'Roboto', sans-serif;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
     margin: 0;
-    background-color: #f4f4f4;
+    background-color: #2aaee2;
 }
 
 #game-board {
     display: grid;
+    position: relative;
     grid-template-columns: repeat(4, 120px);
-    grid-gap: 5px;
+    /* grid-gap: 5px; */
 }
 
 .cell {
     width: 120px;
     height: 120px;
     background-color: white;
-    border: 1px solid black;
+    border: 1px solid rgba(0, 0, 0, 0.349);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1em;
     font-weight: bold;
-    border-radius: 3px;
 }
 
 .game-cell {
@@ -58,4 +61,49 @@ body {
     /* Cor de fundo da sugestão ativa */
     color: #000;
     /* Cor do texto da sugestão ativa */
+}
+
+.search-game-container {
+    display: none;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: white;
+}
+
+#searchForm {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 15px;
+}
+
+#searchForm .description {
+    font-size: 0.8rem;
+    color: #6B7280;
+}
+
+#searchForm #search {
+    padding: 10px;
+    font-size: 0.9rem;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.cancel-section {
+    background-color: #f3f4f6;
+    padding: 15px;
+}
+
+.cancel-section .cancel-button {
+    font-family: inherit;
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: 10px 15px;
+    background-color: red;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer
 }

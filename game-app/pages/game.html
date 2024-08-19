@@ -14,21 +14,31 @@
     <div id="game-board">
         <!-- Criar células do tabuleiro -->
         <div class="cell logo-cell"><img src="../images/pacman.svg" alt="Imagem do pacman"></div>
-        <div class="cell category-cell">1</div>
-        <div class="cell category-cell">2</div>
-        <div class="cell category-cell">3</div>
-        <div class="cell category-cell">1</div>
+        <div class="cell category-cell"></div>
+        <div class="cell category-cell"></div>
+        <div class="cell category-cell"></div>
+        <div class="cell category-cell"></div>
         <div class="cell game-cell"></div>
         <div class="cell game-cell"></div>
         <div class="cell game-cell"></div>
-        <div class="cell category-cell">2</div>
+        <div class="cell category-cell"></div>
         <div class="cell game-cell"></div>
         <div class="cell game-cell"></div>
         <div class="cell game-cell"></div>
-        <div class="cell category-cell">3</div>
+        <div class="cell category-cell"></div>
         <div class="cell game-cell"></div>
         <div class="cell game-cell"></div>
         <div class="cell game-cell"></div>
+
+        <div class="search-game-container">
+            <form id="searchForm" action="" method="GET">
+                <span class="description"></span>
+                <input id="search" type="text" spellcheck="false" placeholder="Busque o jogo...">
+            </form>
+            <div class="cancel-section">
+                <button class="cancel-button">Cancelar</button>
+            </div>
+        </div>
     </div>
     <!-- <a href="./pages/search.html">Página de busca.</a> -->
 </body>
