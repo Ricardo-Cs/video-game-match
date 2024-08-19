@@ -1,4 +1,9 @@
-/* styles.css */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 body {
     display: flex;
     justify-content: center;
@@ -10,25 +15,30 @@ body {
 
 #game-board {
     display: grid;
-    grid-template-columns: repeat(4, 100px);
+    grid-template-columns: repeat(4, 120px);
     grid-gap: 5px;
 }
 
 .cell {
-    width: 100px;
-    height: 100px;
+    width: 120px;
+    height: 120px;
     background-color: white;
     border: 1px solid black;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1em;
-    cursor: pointer;
     font-weight: bold;
+    border-radius: 3px;
+}
+
+.game-cell {
+    cursor: pointer;
 }
 
 .category-cell {
     background-color: #d4d4d4;
+    padding: 5px;
 }
 
 .logo-cell {

@@ -1,4 +1,3 @@
-const cells = Array.from(document.querySelectorAll('[data-cell]'));
 const categoriesCells = Array.from(document.querySelectorAll('.category-cell'));
 
 // Função para carregar as categorias do localStorage
