@@ -94,6 +94,7 @@ export function submitForm(guid, categories) {
         categories: categories
     };
 
+    console.log(JSON.stringify(requestBody))
     // Faz a requisição POST com os dados no corpo
     fetch(url, {
         method: 'POST', // Define o método HTTP como POST
@@ -120,8 +121,8 @@ export function submitForm(guid, categories) {
 function verifyAnswer(answer) {
     searchContainer.style.display = "none";
     if (answer) {
-        alert('Acertou!')
+        console.log('Acertou!')
     } else {
-        alert('Errou!');
+        console.log('Errou!');
     }
 }

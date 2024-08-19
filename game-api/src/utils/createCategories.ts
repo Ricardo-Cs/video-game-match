@@ -4,13 +4,13 @@ type Condition = {
     value: string | number;
 };
 
-type Category = {
+export type Category = {
     name: string;
     type: string;
     condition: Condition;
 };
 
-type CategoriesData = {
+export type CategoriesData = {
     categories: Category[];
 };
 

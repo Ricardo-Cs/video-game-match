@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { createCategoriesService, gameSearchService } from "../services/gameService";
+import { createCategoriesService, gameSearchService, verifyAnswerService } from "../services/gameService";
 
 export const createCategoriesController = async (req: Request, res: Response) => {
     const categories = await createCategoriesService();
@@ -17,5 +17,11 @@ export const searchGameController = async (req: Request, res: Response) => {
 }
 
 export const verifyAnswerController = async (req: Request, res: Response) => {
-    res.json({ dados: req.body, answer: false });
+    try {
+        const data = req.body;
+        const response = await verifyAnswerService(data);
+        res.json(response.data)
+    } catch (error) {
+        res.status(500).send(`Erro: ${error}`)
+    }
 }
