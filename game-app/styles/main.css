@@ -56,11 +56,24 @@ body {
     color: blue;
 }
 
-.autocomplete-active {
+.autocomplete-items {
+    color: #000000;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 480px;
+    /* Altura máxima antes de mostrar o scroll */
+    overflow-y: auto;
+    /* Adiciona o scroll vertical */
+}
+
+.autocomplete-items .autocomplete-item {
+    cursor: pointer;
+    padding: 5px;
+}
+
+.autocomplete-items .autocomplete-item:hover {
     background-color: #d4d4d4;
-    /* Cor de fundo da sugestão ativa */
-    color: #000;
-    /* Cor do texto da sugestão ativa */
 }
 
 .search-game-container {

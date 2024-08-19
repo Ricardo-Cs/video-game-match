@@ -30,6 +30,7 @@ function loadCategories() {
 }
 
 function hideAndShowSearchBox(event) {
+    searchInput.value = "";
     const cell = event.target;
     const cellIndex = gameCells.indexOf(cell);
 
@@ -76,9 +77,8 @@ function hideAndShowSearchBox(event) {
             break;
     }
     const categories = JSON.parse(sessionStorage.getItem('gameCategories'));
-    if (categories) {
-        console.log("Categoria 1: ", categories[associatedCategories[0]].name);
-        console.log("Categoria 2: ", categories[associatedCategories[1]].name);
-        searchDescription.textContent = `Ache um ${categories[associatedCategories[0]].name} e um ${categories[associatedCategories[1]].name}`
-    }
+    associatedCategories = [categories[associatedCategories[0]], categories[associatedCategories[1]]]
+    searchDescription.textContent = `Ache um ${associatedCategories[0].name} e um ${associatedCategories[1].name}`
+
+    console.log(associatedCategories)
 }
