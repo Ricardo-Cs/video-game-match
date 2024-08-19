@@ -1,7 +1,7 @@
 const input = document.querySelector('#search');
 const form = document.querySelector('#searchForm');
 
-let suggestions = []; // Inicialmente vazio, será preenchido com os nomes dos jogos retornados pela API
+let suggestions = {}; // Objeto para armazenar as sugestões e seus GUIDs
 let debounceTimeout;
 
 input.addEventListener('input', (e) => {
@@ -20,13 +20,12 @@ input.addEventListener('input', (e) => {
         fetch(`http://localhost:3333/game/search/${inputValue}`)
             .then(response => response.json())
             .then(data => {
-                console.log(data)
-                // Limpar o array de sugestões antes de preencher com novos dados
-                suggestions = [];
+                // Limpar o objeto de sugestões antes de preencher com novos dados
+                suggestions = {};
 
                 // Processar a lista de jogos retornada
                 data.results.forEach(game => {
-                    suggestions.push(game.name);
+                    suggestions[game.name] = game.guid; // Armazena o nome do jogo como chave e o guid como valor
                 });
 
                 // Gerar a lista de sugestões
@@ -44,17 +43,18 @@ function generateSuggestions(inputValue) {
     input.parentNode.appendChild(listContainer);
 
     // Filtrar sugestões com base no valor do input
-    suggestions.forEach(function (suggestion) {
+    Object.keys(suggestions).forEach(function (suggestion) {
         if (suggestion.toLowerCase().includes(inputValue.toLowerCase())) {
             const item = document.createElement('div');
             item.setAttribute('class', 'autocomplete-item');
             item.innerHTML = suggestion;
 
-            // Quando o usuário clica na sugestão, o campo de input é preenchido e o formulário é submetido
+            // Quando o usuário clica na sugestão, o campo de input é preenchido e o GUID é logado
             item.addEventListener('click', function () {
                 input.value = suggestion;
+                const selectedGuid = suggestions[suggestion];
                 closeAllLists();
-                form.submit(); // Submete o formulário
+                form.submit()
             });
 
             listContainer.appendChild(item);
