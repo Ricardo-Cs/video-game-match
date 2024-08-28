@@ -6,7 +6,7 @@
             "condition": {
                 "field": "developers",
                 "operator": "includes",
-                "value": "Nintendo"
+                "value": "Nintendo EAD"
             }
         },
         {
@@ -15,7 +15,7 @@
             "condition": {
                 "field": "developers",
                 "operator": "includes",
-                "value": "From Software"
+                "value": "FromSoftware, Inc."
             }
         },
         {
@@ -43,6 +43,15 @@
                 "field": "genre",
                 "operator": "includes",
                 "value": "Action"
+            }
+        },
+        {
+            "name": "Gênero: RPG",
+            "type": "genre",
+            "condition": {
+                "field": "genre",
+                "operator": "includes",
+                "value": "Role-Playing"
             }
         },
         {
@@ -79,15 +88,6 @@
                 "field": "reward",
                 "operator": "includes",
                 "value": "GOTY"
-            }
-        },
-        {
-            "name": "Jogo de RPG",
-            "type": "genre",
-            "condition": {
-                "field": "genre",
-                "operator": "includes",
-                "value": "RPG"
             }
         },
         {

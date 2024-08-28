@@ -1,4 +1,4 @@
-function verifyGame(guid) {
+function verifyGame(id) {
     fetch(`http://localhost:3333/game/search/${inputValue}`)
         .then(response => response.json())
         .then(data => {
@@ -7,7 +7,7 @@ function verifyGame(guid) {
 
             // Processar a lista de jogos retornada
             data.results.forEach(game => {
-                suggestions[game.name] = game.guid; // Armazena o nome do jogo como chave e o guid como valor
+                suggestions[game.name] = game.id; // Armazena o nome do jogo como chave e o id como valor
             });
 
             // Gerar a lista de sugestões

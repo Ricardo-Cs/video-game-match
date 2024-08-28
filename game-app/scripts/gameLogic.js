@@ -84,24 +84,21 @@ export function getCategoriesByCellIndex(index) {
     return associatedCategories = [categories[associatedCategories[0]], categories[associatedCategories[1]]]
 }
 
-export function submitForm(guid, categories) {
-    // Define a URL para onde a requisição será enviada
+export function submitForm(id, categories) {
     const url = 'http://localhost:3333/game/verifyAnswer';
 
-    // Prepara os dados a serem enviados no corpo da requisição
     const requestBody = {
-        guid: guid,
+        id: id,
         categories: categories
     };
 
     console.log(JSON.stringify(requestBody))
-    // Faz a requisição POST com os dados no corpo
     fetch(url, {
-        method: 'POST', // Define o método HTTP como POST
+        method: 'POST',
         headers: {
             'Content-Type': 'application/json' // Define o tipo de conteúdo como JSON
         },
-        body: JSON.stringify(requestBody) // Converte o corpo da requisição para JSON
+        body: JSON.stringify(requestBody)
     })
         .then(response => {
             if (!response.ok) {
@@ -110,8 +107,7 @@ export function submitForm(guid, categories) {
             return response.json(); // Converte a resposta para JSON
         })
         .then(data => {
-            // Verifica o valor do dado "answer" na resposta
-            verifyAnswer(data.answer);
+            verifyAnswer(data)
         })
         .catch(error => {
             console.error('Error:', error); // Lida com erros
@@ -120,9 +116,20 @@ export function submitForm(guid, categories) {
 
 function verifyAnswer(answer) {
     searchContainer.style.display = "none";
-    if (answer) {
-        console.log('Acertou!')
+
+    if (answer.answer) {
+        const imageUrl = answer.image;
+        const clickedCell = gameCells[lastClickedCellIndex];
+
+        const imgElement = document.createElement('img');
+        imgElement.src = imageUrl;
+        imgElement.alt = 'Imagem do jogo';
+        imgElement.style.width = '100%'; // Ajusta o tamanho da imagem conforme necessário
+
+        imgElement.classList.add('fade-in-image');
+        // Insere a imagem na célula clicada
+        clickedCell.appendChild(imgElement);
     } else {
-        console.log('Errou!');
+        console.log("Errou")
     }
 }

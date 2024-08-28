@@ -1,14 +1,16 @@
-import axios from "axios";
+import axios, { request } from "axios";
 import { env } from "../env";
 import path from "path";
 import fs from "fs";
-import { Category, createCategories } from "../utils/createCategories";
+import { isValid } from "../utils/isValid";
+import { createCategories } from "../utils/createCategories";
+import { answerData, GameSearchResponse } from "../types/types";
 
 const baseApi = env.GAME_API_BASE_URL;
-
-type answerData = {
-    guid: string,
-    categories: Category[]
+const headers = {
+    "Authorization": "Bearer k720nae7u8gkuljrg3nziypymool1y",
+    "Client-ID": `${env.CLIENT_ID}`,
+    "Content-Type": "text/plain"
 }
 
 export const createCategoriesService = () => {
@@ -21,11 +23,27 @@ export const createCategoriesService = () => {
 };
 
 export const gameSearchService = async (search: string) => {
-    const response = await axios.get(`${baseApi}search/?api_key=${env.API_KEY}&format=json&query="${search}"&resources=game&field_list=name,guid`)
+    const response = await axios.post(
+        'https://api.igdb.com/v4/games',
+        `search "${search}"; fields id, name; where category != 1;`,
+        { headers }
+    );
     return response;
 };
 
 export const verifyAnswerService = async (data: answerData) => {
-    const request = await axios.get(`${baseApi}game/${data.guid}/?api_key=${env.API_KEY}&format=json&field_list=developers,original_release_date,genres,platforms,dlcs,image`);
-    return request;
+    const request = await axios.post(
+        'https://api.igdb.com/v4/games',
+        `fields genres, involved_companies, name, platforms, release_dates; where id = ${data.id};`,
+        { headers }
+    );
+
+    return request.data;
+    // const response: boolean = isValid(request, data);
+    // return request.data.results
+    // if (response) {
+    //     return { answer: true, image: request.data.results.image?.icon_url }
+    // } else {
+    //     return { answer: false };
+    // }
 }

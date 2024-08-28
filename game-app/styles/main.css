@@ -61,7 +61,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 2px;
-    max-height: 400px;
+    max-height: 280px;
     /* Altura máxima antes de mostrar o scroll */
     overflow-y: auto;
     /* Adiciona o scroll vertical */

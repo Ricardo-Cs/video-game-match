@@ -1,22 +1,9 @@
-type Condition = {
-    field: string;
-    operator: string;
-    value: string | number;
-};
-
-export type Category = {
-    name: string;
-    type: string;
-    condition: Condition;
-};
-
-export type CategoriesData = {
-    categories: Category[];
-};
+import { CategoriesData, Category } from "../types/types";
 
 const incompatiblePairs = [
     ["Jogo da Nintendo", "Jogo da From Software"],
-    ["Lançado depois de 1999", "Lançado antes de 1999"]
+    ["Lançado depois de 1999", "Lançado antes de 1999"],
+    ["Jogo da From Software", "Jogo Mobile"]
 ];
 
 export const createCategories = (categoriesData: CategoriesData) => {

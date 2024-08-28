@@ -20,7 +20,7 @@ export const verifyAnswerController = async (req: Request, res: Response) => {
     try {
         const data = req.body;
         const response = await verifyAnswerService(data);
-        res.json(response.data)
+        res.json(response)
     } catch (error) {
         res.status(500).send(`Erro: ${error}`)
     }
