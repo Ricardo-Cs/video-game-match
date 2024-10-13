@@ -55,6 +55,15 @@
             }
         },
         {
+            "name": "Gênero: Ação e Aventura",
+            "type": "genre",
+            "condition": {
+                "field": "genre",
+                "operator": "includes",
+                "value": "Action-Adventure"
+            }
+        },
+        {
             "name": "Jogo da Steam",
             "type": "platform",
             "condition": {

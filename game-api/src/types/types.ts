@@ -15,7 +15,7 @@ export type CategoriesData = {
 };
 
 export type answerData = {
-    id: number,
+    guid: string,
     categories: Category[]
 }
 

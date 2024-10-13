@@ -36,12 +36,16 @@ body {
 }
 
 .game-cell {
+    background-image: url('../images/plusIcon.svg');
+    background-repeat: no-repeat;
+    background-position: center;
     cursor: pointer;
 }
 
 .category-cell {
     background-color: #d4d4d4;
     padding: 5px;
+    text-align: center;
 }
 
 .logo-cell {

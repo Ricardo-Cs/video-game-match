@@ -1,10 +1,9 @@
 import { CategoriesData, Category } from "../types/types";
 
-const incompatiblePairs = [
-    ["Jogo da Nintendo", "Jogo da From Software"],
-    ["Lançado depois de 1999", "Lançado antes de 1999"],
-    ["Jogo da From Software", "Jogo Mobile"]
-];
+// const incompatiblePairs = [
+//     ["Jogo da Nintendo", "Jogo da From Software"],
+//     ["Lançado depois de 1999", "Lançado antes de 1999"],
+// ];
 
 export const createCategories = (categoriesData: CategoriesData) => {
     const selectedCategories: Category[] = [];

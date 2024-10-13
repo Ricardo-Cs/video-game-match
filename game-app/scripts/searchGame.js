@@ -25,8 +25,8 @@ input.addEventListener('input', (e) => {
                 // Limpar o objeto de sugestões antes de preencher com novos dados
                 suggestions = {};
 
-                data.forEach(game => {
-                    suggestions[game.name] = game.id;
+                data.results.forEach(game => {
+                    suggestions[game.name] = game.guid;
                 });
 
                 // Gerar a lista de sugestões
@@ -59,10 +59,10 @@ function generateSuggestions(inputValue) {
             // Quando o usuário clica na sugestão, o campo de input é preenchido e o GUID é logado
             item.addEventListener('click', function () {
                 input.value = suggestion;
-                const selectedId = suggestions[suggestion];
+                const selectedGuid = suggestions[suggestion];
                 closeAllLists();
                 let associatedCategories = getCategoriesByCellIndex(lastClickedCellIndex)
-                submitForm(selectedId, associatedCategories)
+                submitForm(selectedGuid, associatedCategories)
             });
 
             listContainer.appendChild(item);

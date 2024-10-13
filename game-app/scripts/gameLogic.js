@@ -84,11 +84,11 @@ export function getCategoriesByCellIndex(index) {
     return associatedCategories = [categories[associatedCategories[0]], categories[associatedCategories[1]]]
 }
 
-export function submitForm(id, categories) {
+export function submitForm(guid, categories) {
     const url = 'http://localhost:3333/game/verifyAnswer';
 
     const requestBody = {
-        id: id,
+        guid: guid,
         categories: categories
     };
 
