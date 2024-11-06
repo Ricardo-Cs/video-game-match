@@ -5,6 +5,7 @@ const cancellButton = document.querySelector('.cancel-button');
 const searchDescription = document.querySelector('#searchForm .description');
 const searchInput = document.querySelector('#search');
 
+let currentPlayer = 0;
 export let lastClickedCellIndex = null; // Variável para armazenar o índice da última célula clicada
 
 // Event Listeners e chamada de funções
@@ -117,6 +118,7 @@ export function submitForm(guid, categories) {
 function verifyAnswer(answer) {
     searchContainer.style.display = "none";
 
+    console.log(answer)
     if (answer.answer) {
         const imageUrl = answer.image;
         const clickedCell = gameCells[lastClickedCellIndex];
@@ -124,12 +126,9 @@ function verifyAnswer(answer) {
         const imgElement = document.createElement('img');
         imgElement.src = imageUrl;
         imgElement.alt = 'Imagem do jogo';
-        imgElement.style.width = '100%'; // Ajusta o tamanho da imagem conforme necessário
-
-        imgElement.classList.add('fade-in-image');
-        // Insere a imagem na célula clicada
         clickedCell.appendChild(imgElement);
     } else {
-        console.log("Errou")
+        alert('Errou!');
+        currentPlayer = currentPlayer === 0 ? 1 : 0;
     }
 }

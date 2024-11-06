@@ -15,9 +15,9 @@ export const isValid = (apiResponse: GameSearchResponse, answerData: answerData)
             case "releaseYear":
                 const operator = category.condition.operator;
                 const releaseYear = apiResponseData.original_release_date?.split("-")[0] as string;
-                if (operator === "<") {
+                if (operator === "<=") {
                     response.push(releaseYear < category.condition.value ? true : false)
-                } else if (operator === ">")
+                } else if (operator === ">=")
                     response.push(releaseYear > category.condition.value ? true : false)
                 break;
 

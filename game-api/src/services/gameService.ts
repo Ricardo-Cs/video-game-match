@@ -25,11 +25,11 @@ export const gameSearchService = async (search: string) => {
 export const verifyAnswerService = async (data: answerData) => {
     const request = await axios.get(`${baseApi}game/${data.guid}/?api_key=${env.API_KEY}&format=json&field_list=developers,original_release_date,genres,platforms,dlcs,image`);
 
-    return request.data;
-    // const response: boolean = isValid(request, data);
-    // if (response) {
-    //     return { answer: true, image: request.data.results.image?.original_url }
-    // } else {
-    //     return { answer: false };
-    // }
+    // return request.data;
+    const response: boolean = isValid(request, data);
+    if (response) {
+        return { answer: true, image: request.data.results.image?.original_url }
+    } else {
+        return { answer: false };
+    }
 }

@@ -19,6 +19,15 @@
             }
         },
         {
+            "name": "Jogo da Valve",
+            "type": "developers",
+            "condition": {
+                "field": "developers",
+                "operator": "includes",
+                "value": "Valve Corporation"
+            }
+        },
+        {
             "name": "Lançado depois de 1999",
             "type": "releaseYear",
             "condition": {
@@ -64,12 +73,39 @@
             }
         },
         {
+            "name": "Gênero: Plataforma",
+            "type": "genre",
+            "condition": {
+                "field": "genre",
+                "operator": "includes",
+                "value": "Platformer"
+            }
+        },
+        {
+            "name": "Gênero: Puzzle",
+            "type": "genre",
+            "condition": {
+                "field": "genre",
+                "operator": "includes",
+                "value": "Puzzle"
+            }
+        },
+        {
             "name": "Jogo da Steam",
             "type": "platform",
             "condition": {
                 "field": "platform",
                 "operator": "includes",
                 "value": "steam"
+            }
+        },
+        {
+            "name": "Jogo de Nintendo Switch",
+            "type": "platform",
+            "condition": {
+                "field": "platform",
+                "operator": "includes",
+                "value": "Nintendo Switch"
             }
         },
         {
@@ -87,7 +123,7 @@
             "condition": {
                 "field": "platform",
                 "operator": "includes",
-                "value": "Mobile"
+                "value": "iPod || iPhone || iPad || Android"
             }
         },
         {
