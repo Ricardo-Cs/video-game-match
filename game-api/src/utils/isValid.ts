@@ -22,11 +22,19 @@ export const isValid = (apiResponse: GameSearchResponse, answerData: answerData)
                 break;
 
             case "genre":
-                const isGenreIncluded = apiResponseData.genres?.some(genre =>
-                    genre.name === category.condition.value
-                );
-                response.push(isGenreIncluded ? true : false);
+                const genreNames = apiResponseData.genres?.map(genre => genre.name);
+                // console.log(apiResponseData.genres);
+
+                // Convertendo category.condition.value para string
+                const conditionValue = String(category.condition.value);
+
+                if (genreNames?.includes(conditionValue)) {
+                    response.push(true);
+                } else {
+                    response.push(false);
+                }
                 break;
+
             default:
                 break;
         }

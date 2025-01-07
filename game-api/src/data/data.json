@@ -91,39 +91,12 @@
             }
         },
         {
-            "name": "Jogo da Steam",
+            "name": "Jogo de PlayStation 2",
             "type": "platform",
             "condition": {
                 "field": "platform",
                 "operator": "includes",
-                "value": "steam"
-            }
-        },
-        {
-            "name": "Jogo de Nintendo Switch",
-            "type": "platform",
-            "condition": {
-                "field": "platform",
-                "operator": "includes",
-                "value": "Nintendo Switch"
-            }
-        },
-        {
-            "name": "Jogo de PlayStation",
-            "type": "platform",
-            "condition": {
-                "field": "platform",
-                "operator": "includes",
-                "value": "PlayStation"
-            }
-        },
-        {
-            "name": "Jogo Mobile",
-            "type": "platform",
-            "condition": {
-                "field": "platform",
-                "operator": "includes",
-                "value": "iPod || iPhone || iPad || Android"
+                "value": "PS1"
             }
         },
         {
@@ -133,15 +106,6 @@
                 "field": "reward",
                 "operator": "includes",
                 "value": "GOTY"
-            }
-        },
-        {
-            "name": "Desenvolvido na Europa",
-            "type": "developers",
-            "condition": {
-                "field": "developers",
-                "operator": "includes",
-                "value": "Europe"
             }
         },
         {

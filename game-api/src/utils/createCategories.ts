@@ -3,6 +3,7 @@ import { CategoriesData, Category } from "../types/types";
 const incompatiblePairs = [
     ["Jogo da Nintendo", "Jogo da From Software"],
     ["Lançado depois de 1999", "Lançado antes de 1999"],
+    ["Lançado em 2020 ou depois", "Lançado antes de 1999"]
 ];
 
 export const createCategories = (categoriesData: CategoriesData) => {
