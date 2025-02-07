@@ -1,19 +1,21 @@
-const categoriesCells = Array.from(document.querySelectorAll('.category-cell'));
-const gameCells = Array.from(document.querySelectorAll('.game-cell'));
-const searchContainer = document.querySelector('.search-game-container');
-const cancellButton = document.querySelector('.cancel-button');
-const searchDescription = document.querySelector('#searchForm .description');
-const searchInput = document.querySelector('#search');
+const categoriesCells = Array.from(document.querySelectorAll(".category-cell"));
+const gameCells = Array.from(document.querySelectorAll(".game-cell"));
+const searchContainer = document.querySelector(".search-game-container");
+const cancellButton = document.querySelector(".cancel-button");
+const searchDescription = document.querySelector("#searchForm .description");
+const searchInput = document.querySelector("#search");
 
 let currentPlayer = 0;
 export let lastClickedCellIndex = null; // Variável para armazenar o índice da última célula clicada
 
 // Event Listeners e chamada de funções
 gameCells.forEach((cell) => {
-    cell.addEventListener('click', (event) => { hideAndShowSearchBox(event) });
+    cell.addEventListener("click", (event) => {
+        hideAndShowSearchBox(event);
+    });
 });
 
-cancellButton.addEventListener('click', (e) => {
+cancellButton.addEventListener("click", (e) => {
     e.preventDefault();
     searchContainer.style.display = "none";
 });
@@ -22,7 +24,7 @@ loadCategories();
 
 // Função para carregar as categorias do localStorage
 function loadCategories() {
-    const categories = JSON.parse(sessionStorage.getItem('gameCategories'));
+    const categories = JSON.parse(sessionStorage.getItem("gameCategories"));
     categoriesCells.forEach((cell, index) => {
         if (categories && categories[index]) {
             cell.textContent = categories[index].name; // Insere o nome da categoria na célula
@@ -44,8 +46,8 @@ function hideAndShowSearchBox(event) {
         searchInput.focus();
         lastClickedCellIndex = cellIndex; // Atualiza a célula clicada
     }
-    let associatedCategories = getCategoriesByCellIndex(cellIndex)
-    searchDescription.textContent = `Ache um ${associatedCategories[0].name} e um ${associatedCategories[1].name}`
+    let associatedCategories = getCategoriesByCellIndex(cellIndex);
+    searchDescription.textContent = `Ache um ${associatedCategories[0].name} e um ${associatedCategories[1].name}`;
 }
 
 export function getCategoriesByCellIndex(index) {
@@ -81,54 +83,57 @@ export function getCategoriesByCellIndex(index) {
         default:
             break;
     }
-    const categories = JSON.parse(sessionStorage.getItem('gameCategories'));
-    return associatedCategories = [categories[associatedCategories[0]], categories[associatedCategories[1]]]
+    const categories = JSON.parse(sessionStorage.getItem("gameCategories"));
+    return (associatedCategories = [
+        categories[associatedCategories[0]],
+        categories[associatedCategories[1]],
+    ]);
 }
 
 export function submitForm(guid, categories) {
-    const url = 'http://localhost:3333/game/verifyAnswer';
+    const url = "https://videogamematch.onrender.com/game/verifyAnswer";
 
     const requestBody = {
         guid: guid,
-        categories: categories
+        categories: categories,
     };
 
-    console.log(JSON.stringify(requestBody))
+    console.log(JSON.stringify(requestBody));
     fetch(url, {
-        method: 'POST',
+        method: "POST",
         headers: {
-            'Content-Type': 'application/json' // Define o tipo de conteúdo como JSON
+            "Content-Type": "application/json", // Define o tipo de conteúdo como JSON
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
     })
-        .then(response => {
+        .then((response) => {
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                throw new Error("Network response was not ok");
             }
             return response.json(); // Converte a resposta para JSON
         })
-        .then(data => {
-            verifyAnswer(data)
+        .then((data) => {
+            verifyAnswer(data);
         })
-        .catch(error => {
-            console.error('Error:', error); // Lida com erros
+        .catch((error) => {
+            console.error("Error:", error); // Lida com erros
         });
 }
 
 function verifyAnswer(answer) {
     searchContainer.style.display = "none";
 
-    console.log(answer)
+    console.log(answer);
     if (answer.answer) {
         const imageUrl = answer.image;
         const clickedCell = gameCells[lastClickedCellIndex];
 
-        const imgElement = document.createElement('img');
+        const imgElement = document.createElement("img");
         imgElement.src = imageUrl;
-        imgElement.alt = 'Imagem do jogo';
+        imgElement.alt = "Imagem do jogo";
         clickedCell.appendChild(imgElement);
     } else {
-        alert('Errou!');
+        alert("Errou!");
         currentPlayer = currentPlayer === 0 ? 1 : 0;
     }
 }
