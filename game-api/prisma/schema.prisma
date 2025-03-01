@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Award {
+  id         Int          @id @default(autoincrement())
+  name       String
+  game_award game_award[]
+}
+
+model Game {
+  id         Int          @id @default(autoincrement())
+  name       String
+  game_award game_award[]
+}
+
+model game_award {
+  game_id_fk  Int
+  award_id_fk Int
+  year        Int
+  award       Award @relation(fields: [award_id_fk], references: [id])
+  game        Game  @relation(fields: [game_id_fk], references: [id])
+
+  @@id([game_id_fk, award_id_fk])
+}
