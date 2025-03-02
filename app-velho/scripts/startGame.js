@@ -3,7 +3,7 @@ const startButton = document.querySelector("#start-button");
 startButton.addEventListener("click", startGame);
 
 function startGame() {
-    fetch(`https://videogamematch.onrender.com/game/createCategories`)
+    fetch(`http://localhost:3333/game/createCategories`)
         .then((response) => response.json())
         .then((data) => {
             sessionStorage.setItem("gameCategories", JSON.stringify(data));

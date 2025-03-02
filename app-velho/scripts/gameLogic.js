@@ -91,7 +91,7 @@ export function getCategoriesByCellIndex(index) {
 }
 
 export function submitForm(guid, categories) {
-    const url = "https://videogamematch.onrender.com/game/verifyAnswer";
+    const url = "http://localhost:3333/game/verifyAnswer";
 
     const requestBody = {
         guid: guid,

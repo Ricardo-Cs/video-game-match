@@ -1,5 +1,5 @@
 function verifyGame(id) {
-    fetch(`https://videogamematch.onrender.com/game/search/${inputValue}`)
+    fetch(`http://localhost:3333/game/search/${inputValue}`)
         .then((response) => response.json())
         .then((data) => {
             // Limpar o objeto de sugestões antes de preencher com novos dados
