@@ -19,31 +19,14 @@ export type answerData = {
     categories: Category[]
 }
 
-export type GameSearchResponse = {
-    data: {
-        results: {
-            image?: {
-                icon_url?: string;
-                medium_url?: string;
-            };
-            original_release_date?: string;
-            platforms?: {
-                id: number;
-                name: string;
-                abbreviation: string;
-            }[];
-            developers?: {
-                id: number;
-                name: string;
-            }[];
-            genres?: {
-                id: number;
-                name: string;
-            }[];
-            dlcs?: {
-                id: number;
-                name: string;
-            }[];
-        };
-    }
+export interface GameSearchResponse {
+    id: number,
+    first_release_date: number,
+    name: string,
+    game_type: number
 };
+
+export type checkAnswerType = {
+    answer: boolean,
+    image: string | null
+}

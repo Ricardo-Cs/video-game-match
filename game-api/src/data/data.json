@@ -100,12 +100,12 @@
             }
         },
         {
-            "name": "Vencedor do GOTY",
-            "type": "reward",
+            "name": "Vencedor de Melhor Jogo do Ano",
+            "type": "award",
             "condition": {
-                "field": "reward",
+                "field": "award",
                 "operator": "includes",
-                "value": "GOTY"
+                "value": "Game Of The Year"
             }
         },
         {
@@ -181,12 +181,12 @@
             }
         },
         {
-            "name": "Vencedor do Prêmio Melhor Jogo de Ação",
-            "type": "reward",
+            "name": "Vencedor de Melhor Jogo Indie",
+            "type": "award",
             "condition": {
-                "field": "reward",
+                "field": "award",
                 "operator": "includes",
-                "value": "Best Action Game"
+                "value": "Best Indie Game"
             }
         },
         {
