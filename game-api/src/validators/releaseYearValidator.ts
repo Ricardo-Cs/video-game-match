@@ -1,9 +1,9 @@
 import { Category } from "../types/types";
 
-export const releaseYearValidator = (operator: string, releaseYear: string, category: Category): boolean => {
+export const releaseYearValidator = (operator: string, releaseYear: number, category: Category): boolean => {
     if (operator === "<=")
-        return releaseYear <= category.condition.value ? true : false
+        return releaseYear <= Number(category.condition.value) ? true : false
     else if (operator === ">=")
-        return releaseYear >= category.condition.value ? true : false
+        return releaseYear >= Number(category.condition.value) ? true : false
     return false;
 };

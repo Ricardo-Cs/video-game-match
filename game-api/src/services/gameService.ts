@@ -3,8 +3,7 @@ import { env } from "../config/env";
 import path from "path";
 import fs from "fs";
 import { createCategories } from "../utils/createCategories";
-import { answerData, GameSearchResponse } from "../types/types";
-import { isValid } from "../validators/isValid";
+import { answerData, GameCheckApiResponse, GameSearchResponse } from "../types/types";
 import { checkAnswer } from "../validators";
 
 const baseApi = env.GAME_API_BASE_URL;
@@ -41,22 +40,27 @@ export const gameSearchService = async (search: string): Promise<{ name: string,
     }
 };
 
-// export const verifyAnswerService = async (data: answerData) => {
-//     try {
-//         const request = await axios.get(`${baseApi}game/${data.guid}/`, {
-//             params: {
-//                 api_key: env.API_KEY,
-//                 format: 'json',
-//                 field_list: 'developers,original_release_date,genres,platforms,dlcs,image,concepts,platforms'
-//             }
-//         });
-//         checkAnswer(request, data);
-//         // console.log(request.data)
-//         // const isValidResponse = isValid(request, data);
-//         // return isValidResponse
-//         //     ? { answer: true, image: request.data.results.image?.original_url }
-//         //     : { answer: false };
-//     } catch (error) {
-//         throw new Error("Failed to verify answer. Please try again later.");
-//     }
-// };
+export const verifyAnswerService = async (data: answerData) => {
+    try {
+        const query = `fields name, genres.name, first_release_date, platforms.name, dlcs, involved_companies.company.name, player_perspectives.name, cover.url; where id = ${data.id};`;
+        const response = await axios.post<GameCheckApiResponse[]>(
+            `${baseApi}/games`, query, {
+            headers: {
+                'Client-ID': env.CLIENT_ID,
+                'Authorization': `Bearer ${env.CLIENT_TOKEN}`,
+                'Accept': 'application/json',
+                'Content-Type': 'text/plain'
+            }
+        });
+
+        return checkAnswer(response.data[0], data)
+        // console.log(request.data)
+        // const isValidResponse = isValid(request, data);
+        // return isValidResponse
+        //     ? { answer: true, image: request.data.results.image?.original_url }
+        //     : { answer: false };
+    } catch (error) {
+        console.error(error);
+        throw new Error("Failed to verify answer. Please try again later.");
+    }
+};

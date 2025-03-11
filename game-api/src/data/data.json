@@ -60,7 +60,7 @@
             "condition": {
                 "field": "genre",
                 "operator": "includes",
-                "value": "Role-Playing"
+                "value": "Role-playing (RPG)"
             }
         },
         {
