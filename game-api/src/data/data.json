@@ -2,29 +2,29 @@
     "categories": [
         {
             "name": "Jogo da Nintendo",
-            "type": "developers",
+            "type": "company",
             "condition": {
-                "field": "developers",
+                "field": "company",
                 "operator": "includes",
-                "value": "Nintendo EAD"
+                "value": "Nintendo"
             }
         },
         {
             "name": "Jogo da From Software",
-            "type": "developers",
+            "type": "company",
             "condition": {
-                "field": "developers",
+                "field": "company",
                 "operator": "includes",
-                "value": "FromSoftware, Inc."
+                "value": "FromSoftware."
             }
         },
         {
             "name": "Jogo da Valve",
-            "type": "developers",
+            "type": "company",
             "condition": {
-                "field": "developers",
+                "field": "company",
                 "operator": "includes",
-                "value": "Valve Corporation"
+                "value": "Valve"
             }
         },
         {
@@ -64,24 +64,6 @@
             }
         },
         {
-            "name": "Gênero: Ação e Aventura",
-            "type": "genre",
-            "condition": {
-                "field": "genre",
-                "operator": "includes",
-                "value": "Action-Adventure"
-            }
-        },
-        {
-            "name": "Gênero: Plataforma",
-            "type": "genre",
-            "condition": {
-                "field": "genre",
-                "operator": "includes",
-                "value": "Platformer"
-            }
-        },
-        {
             "name": "Gênero: Puzzle",
             "type": "genre",
             "condition": {
@@ -96,7 +78,16 @@
             "condition": {
                 "field": "platform",
                 "operator": "includes",
-                "value": "PS1"
+                "value": "PlayStation 2"
+            }
+        },
+        {
+            "name": "Jogo de PlayStation 3",
+            "type": "platform",
+            "condition": {
+                "field": "platform",
+                "operator": "includes",
+                "value": "PlayStation 3"
             }
         },
         {
@@ -106,15 +97,6 @@
                 "field": "award",
                 "operator": "includes",
                 "value": "Game Of The Year"
-            }
-        },
-        {
-            "name": "Com Modo Multiplayer",
-            "type": "features",
-            "condition": {
-                "field": "features",
-                "operator": "includes",
-                "value": "Multiplayer"
             }
         },
         {
@@ -128,56 +110,20 @@
         },
         {
             "name": "Jogo Indie",
-            "type": "developers",
+            "type": "genre",
             "condition": {
-                "field": "developers",
+                "field": "genre",
                 "operator": "includes",
                 "value": "Indie"
             }
         },
         {
-            "name": "Com Gráficos 2D",
-            "type": "graphics",
+            "name": "Com DLCS",
+            "type": "dlcs",
             "condition": {
-                "field": "graphics",
+                "field": "dlcs",
                 "operator": "includes",
-                "value": "2D"
-            }
-        },
-        {
-            "name": "Com Gráficos 3D",
-            "type": "graphics",
-            "condition": {
-                "field": "graphics",
-                "operator": "includes",
-                "value": "3D"
-            }
-        },
-        {
-            "name": "Jogo com Modo História",
-            "type": "features",
-            "condition": {
-                "field": "features",
-                "operator": "includes",
-                "value": "Story Mode"
-            }
-        },
-        {
-            "name": "Desenvolvido nos EUA",
-            "type": "developers",
-            "condition": {
-                "field": "developers",
-                "operator": "includes",
-                "value": "USA"
-            }
-        },
-        {
-            "name": "Com Expansões",
-            "type": "features",
-            "condition": {
-                "field": "features",
-                "operator": "includes",
-                "value": "Expansions"
+                "value": "dlcs"
             }
         },
         {
@@ -190,12 +136,30 @@
             }
         },
         {
-            "name": "Jogo com Co-op Local",
-            "type": "features",
+            "name": "Jogo Single-Player",
+            "type": "gameMode",
             "condition": {
-                "field": "features",
+                "field": "gameMode",
                 "operator": "includes",
-                "value": "Local Co-op"
+                "value": "Single player"
+            }
+        },
+        {
+            "name": "Jogo Multiplayer",
+            "type": "gameMode",
+            "condition": {
+                "field": "gameMode",
+                "operator": "includes",
+                "value": "Multiplayer"
+            }
+        },
+        {
+            "name": "Jogo Coop",
+            "type": "gameMode",
+            "condition": {
+                "field": "gameMode",
+                "operator": "includes",
+                "value": "Co-operative"
             }
         }
     ]

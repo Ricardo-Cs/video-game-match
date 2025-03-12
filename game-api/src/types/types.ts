@@ -55,11 +55,16 @@ export interface GameCheckApiResponse {
     player_perspectives?: {
         id: number,
         name: string
-    }[]
+    }[],
+    game_modes?: {
+        id: number,
+        name: string
+    }
 }
 
 
 export interface checkAnswerType {
     answer: boolean,
-    image: string | null
+    image?: string | null
+    message?: string
 }

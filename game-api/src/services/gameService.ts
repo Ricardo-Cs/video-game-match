@@ -31,6 +31,7 @@ export const gameSearchService = async (search: string): Promise<{ name: string,
         });
 
         return response.data.map((game) => ({
+            id: game.id,
             name: game.name,
             release_year: game.first_release_date ? new Date(game.first_release_date * 1000).getFullYear() : undefined,
         }));
@@ -53,12 +54,7 @@ export const verifyAnswerService = async (data: answerData) => {
             }
         });
 
-        return checkAnswer(response.data[0], data)
-        // console.log(request.data)
-        // const isValidResponse = isValid(request, data);
-        // return isValidResponse
-        //     ? { answer: true, image: request.data.results.image?.original_url }
-        //     : { answer: false };
+        return checkAnswer(response.data[0], data);
     } catch (error) {
         console.error(error);
         throw new Error("Failed to verify answer. Please try again later.");
