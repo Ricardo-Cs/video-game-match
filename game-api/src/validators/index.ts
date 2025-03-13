@@ -18,7 +18,7 @@ export const checkAnswer = async (apiResponse: GameCheckApiResponse, data: answe
                 const releaseYear = new Date(apiResponse.first_release_date * 1000).getFullYear();
                 return releaseYearValidator(operator, releaseYear, category);
             }
-            case "developers": {
+            case "company": {
                 const companies = apiResponse.involved_companies?.map(company => company.company.name);
                 return companyValidator(companies, category.condition.value as string);
             }
