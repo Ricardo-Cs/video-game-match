@@ -1,0 +1,22 @@
+.home-container {
+    width: 100%;
+    height: calc(100vh - 60px);  /* 100% da tela menos a altura da Navbar */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.home-content {
+    display: flex;
+    flex-direction: column;
+    background-color: #ffffff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    border-radius: 10px;
+    gap: 10px;
+}
+
+.home-buttons button{
+    cursor: pointer;
+}

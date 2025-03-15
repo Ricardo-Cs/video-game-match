@@ -1,25 +1,23 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import HomeIcon from '@mui/icons-material/Home';
+import '../styles/home.css';
+
 const Home: React.FC = () => {
   return (
-    <div className="">
-      <h1 className="">VideogameMatch</h1>
-      <p className="">Escolha um modo para jogar</p>
-      <HomeIcon color='primary'/>
+    <div className="home-container">
+      <div className="home-content">
+        <span>Video Game Match</span>
+        <p>Escolha um modo para jogar</p>
 
-      <div className="">
-        <Link to="/singleplayer">
-          <button className="">
-            Singleplayer
-          </button>
-        </Link>
+        <div className="home-buttons">
+          <Link to="/singleplayer">
+            <button>Singleplayer</button>
+          </Link>
 
-        <Link to="/multiplayer">
-          <button className="">
-            Multiplayer
-          </button>
-        </Link>
+          <Link to="/multiplayer">
+            <button>Multiplayer</button>
+          </Link>
+        </div>
       </div>
     </div>
   );

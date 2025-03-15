@@ -1,14 +1,18 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-
+import '../styles/navBar.css';
+import VideogameAssetIcon from '@mui/icons-material/VideogameAsset';
 
 const Navbar: React.FC = () => (
-  <nav className="">
-    <h1 className="">VideogameMatch</h1>
-    <div>
-      <Link to="/" className="mx-2">Início</Link>
-      <Link to="/singleplayer" className="mx-2">Singleplayer</Link>
-      <Link to="/multiplayer" className="mx-2">Multiplayer</Link>
+  <nav className="navbar">
+    <div className="navbar-brand">
+      <VideogameAssetIcon />
+      <span>VideogameMatch</span>
+    </div>
+    <div className="navbar-links">
+      <Link to="/">Início</Link>
+      <Link to="/singleplayer">Singleplayer</Link>
+      <Link to="/multiplayer">Multiplayer</Link>
     </div>
   </nav>
 );
