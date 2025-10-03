@@ -15,7 +15,7 @@ const Home: React.FC = () => {
           </Link>
 
           <Link to="/multiplayer">
-            <button>Multiplayer</button>
+            <button disabled>Multiplayer</button>
           </Link>
         </div>
       </div>
