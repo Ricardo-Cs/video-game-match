@@ -1,3 +1,2 @@
-export const platformValidator = (apiResponsePlatforms: string[] | undefined, answerPlatform: string): boolean => {
-    return apiResponsePlatforms?.includes(answerPlatform) ? true : false;
-};
+export const platformValidator = (apiResponsePlatforms: string[] | undefined, answerPlatform: string): boolean =>
+    apiResponsePlatforms?.includes(answerPlatform) ?? false;
