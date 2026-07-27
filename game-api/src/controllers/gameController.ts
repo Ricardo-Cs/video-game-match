@@ -1,27 +1,18 @@
 import { Request, Response } from "express";
 import { createCategoriesService, gameSearchService, verifyAnswerService } from "../services/gameService";
 
-export const createCategoriesController = async (req: Request, res: Response) => {
-    const categories = createCategoriesService();
-    res.json(categories)
-}
+// Express 5 encaminha rejeições de handlers async ao errorHandler automaticamente,
+// então os controllers ficam livres de try/catch.
+export const createCategoriesController = (_req: Request, res: Response) => {
+    res.json(createCategoriesService());
+};
 
 export const searchGameController = async (req: Request, res: Response) => {
-    try {
-        const search = req.params.search;
-        const response = await gameSearchService(search);
-        res.json(response);
-    } catch (error) {
-        res.status(500).json({ message: `Erro ao procurar o jogo: ${error}` })
-    }
-}
+    const games = await gameSearchService(req.params.search);
+    res.json(games);
+};
 
 export const verifyAnswerController = async (req: Request, res: Response) => {
-    try {
-        const data = req.body;
-        const response = await verifyAnswerService(data);
-        res.json(response)
-    } catch (error) {
-        res.status(500).json({ message: `Erro ao verificar a resposta: ${error}` })
-    }
-}
+    const result = await verifyAnswerService(req.body);
+    res.json(result);
+};
