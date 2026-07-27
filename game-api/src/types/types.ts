@@ -21,31 +21,39 @@ export interface answerData {
 
 export interface GameSearchResponse {
     id: number,
-    first_release_date: number,
+    first_release_date?: number,
     name: string,
     game_type: number
 };
 
+// DTO devolvido ao cliente pela rota de busca
+export interface GameSearchResult {
+    id: number,
+    name: string,
+    release_year?: number
+}
+
 export interface GameCheckApiResponse {
     id: number,
     name: string,
-    first_release_date: number,
-    genres: {
+    // A IGDB omite campos vazios, então tudo além de id/name pode faltar
+    first_release_date?: number,
+    genres?: {
         id: number,
         name: string
     }[],
-    platforms: {
+    platforms?: {
         id: number,
         name: string
     }[],
-    cover: {
+    cover?: {
         id: number,
         url: string
     },
     dlcs?: {
         id: number
     }[] | null,
-    involved_companies: {
+    involved_companies?: {
         id: number,
         company: {
             id: number,
@@ -59,7 +67,7 @@ export interface GameCheckApiResponse {
     game_modes?: {
         id: number,
         name: string
-    }
+    }[]
 }
 
 
