@@ -121,6 +121,8 @@ Dois problemas:
 - **Segurança HTTP**: `cors()` aberto para qualquer origem, sem `helmet`, sem rate limit e sem log de requisições.
 - **`GET /game/createCategories`** não é idempotente (sorteia a cada chamada) e usa verbo na URL. `POST /rounds` casa melhor com o item 2.
 - **Monorepo informal**: as duas pastas são projetos soltos, sem workspace. Os tipos de resposta (`GameSearchResult`, `checkAnswerType`, `Category`) vão acabar duplicados no frontend. npm workspaces + um pacote `shared` de tipos resolve barato.
+- **`company` não distingue desenvolvedora de publicadora**: `checkAnswer` achata `involved_companies` em nomes e ignora os booleans `developer` / `publisher` / `porting` / `supporting`. "Jogo da Nintendo" aceita hoje um jogo apenas *publicado* pela Nintendo. Ver Anexo A.
+- **Condições casam por string, não por id**: o valor `"FromSoftware."` (com ponto final) em `data/data.json` é sintoma disso. Fixar o id numérico da IGDB na condição é mais robusto que o nome.
 
 ---
 
@@ -133,3 +135,71 @@ Se for para escolher três frentes:
 3. **Cache da IGDB** (item 4)
 
 Os três juntos transformam o projeto de "backend bonito sem demo" em algo jogável e defensável em portfólio.
+
+---
+
+# Anexo A — Liberdade dos dados da IGDB e expansão de categorias
+
+> Levantamento feito sobre os tipos gerados do schema IGDB v4
+> (`DmitryScaletta/igdb-api-types`), já que a rede atual não permite gerar token para consultar a API direto.
+
+**Conclusão: o limite não é a IGDB, é o código.**
+
+Hoje o projeto tem **7 tipos** de categoria (`genre`, `releaseYear`, `company`, `platform`, `gameMode`, `dlcs`, `award`) e **18 categorias** concretas em `data/data.json`. O objeto `Game` da IGDB expõe **~55 campos**, e `integrations/igdb.ts → getGameById` busca apenas 9 deles.
+
+## A.1 Campos disponíveis e não usados
+
+| Campo IGDB | Categorias que renderia | Vocabulário |
+|---|---|---|
+| `themes` | "Tem terror", "Ficção científica", "Mundo aberto", "Comédia", "Furtivo" | ~22 valores |
+| `player_perspectives` | "Primeira pessoa", "Visão isométrica", "Visão lateral", "VR" | ~7 valores |
+| `game_engines` | "Feito na Unreal", "Feito na Unity", "Feito na RE Engine" | centenas |
+| `franchises` / `collections` | "Da franquia Mario", "Da série Final Fantasy" | milhares |
+| `total_rating` / `aggregated_rating` / `rating_count` | "Nota acima de 90", "Nota abaixo de 70", "Mais de 500 avaliações" | numérico contínuo |
+| `age_ratings` | "Classificação M/18", "Livre para todas as idades" | ESRB, PEGI, USK… |
+| `multiplayer_modes` | "Tem tela dividida", "Coop online", "Coop na campanha", "4+ jogadores locais" | booleans: `splitscreen`, `onlinecoop`, `campaigncoop`, `offlinecoopmax` |
+| `game_type` | "É uma expansão", "É um remake", "É um port" | 15 valores |
+| `remakes` / `remasters` / `ports` / `expansions` | "Ganhou um remake", "Foi remasterizado" | relação |
+| `language_supports` | "Tem dublagem em português" | idioma × tipo de suporte |
+| `platform.generation` / `platform_family` | "Console da 6ª geração", "Qualquer console Nintendo" | agrupa as 200+ plataformas |
+| `keywords` | tags livres ("pixel art", "roguelike") | milhares, **ruidoso** |
+| `/game_time_to_beat` | "Zerável em menos de 10 horas" | endpoint separado |
+
+Como categoria é o par **(tipo, valor)**, cada valor de vocabulário vira uma categoria. Só com gêneros, temas, perspectivas, modos multiplayer, faixas de nota e plataformas relevantes chega-se a **150–300 categorias jogáveis** sem nenhum dado externo. Franquias e engines levam à casa dos milhares.
+
+## A.2 Ganho barato imediato: developer vs publisher
+
+`involved_companies` traz os booleans `developer`, `publisher`, `porting` e `supporting`. O código atual ignora todos:
+
+```ts
+// validators/index.ts
+companyValidator(apiResponse.involved_companies?.map((c) => c.company.name), value as string)
+```
+
+Resultado: "Jogo da Nintendo" aceita um jogo apenas **publicado** pela Nintendo e desenvolvido por outro estúdio. Separando os flags, cada empresa vira duas categorias distintas e mais justas: "Desenvolvido pela X" e "Publicado pela X".
+
+## A.3 Limites reais da IGDB
+
+1. **Campo vazio é campo omitido.** A IGDB não devolve `null`, ela suprime a chave — *ausência de dado é indistinguível de "não tem"*. Isso torna categorias negativas ("não tem DLC", "não tem coop") pouco confiáveis; o `dlcsValidator` atual já vive nesse risco.
+2. **Completude irregular.** `multiplayer_modes`, `language_supports` e `game_engines` dependem de contribuição da comunidade e faltam até em jogos famosos. Categoria baseada neles gera falso negativo.
+3. **`keywords` é vocabulário livre**, sem curadoria — bom para volume, ruim para regra de jogo.
+4. **Match por nome exato é frágil** — usar id numérico na condição (ver item 8).
+5. **Rate limit de ~4 req/s** — o cache do item 4 deixa de ser opcional se as categorias multiplicarem.
+6. **Prêmios não vêm da IGDB.** `award` sai do SQLite local; é a única dimensão cuja expansão exige curadoria manual.
+
+## A.4 O que precisa mudar no código para escalar
+
+Com 18 categorias o design atual aguenta. Com 200, três coisas quebram:
+
+- **`getGameById` tem lista fixa de campos** — cada tipo novo exige editar a query à mão. Melhor: derivar os campos necessários a partir dos tipos das categorias sorteadas para a rodada.
+- **O `switch` de `checkAnswer`** vira inadministrável → registry `Record<CategoryType, Validator>` (item 5).
+- **`incompatiblePairs` é hardcoded por nome** em `utils/createCategories.ts` — O(n²) manual, inviável com 200 categorias. A incompatibilidade precisa ser **derivada da condição** (mesmo tipo + operadores/faixas mutuamente exclusivos), não listada à mão.
+
+## A.5 Oportunidade: validar a rodada antes de servir
+
+A IGDB aceita `count` nos endpoints (ex.: `POST /games/count`). Dá para perguntar **quantos jogos satisfazem uma combinação de categorias** antes de servir a rodada. Isso entrega duas coisas de uma vez:
+
+- **garantia de rodada solucionável** (nenhuma combinação com zero jogos possíveis);
+- **métrica objetiva de dificuldade** por categoria e por combinação.
+
+Para um jogo em formato de grade, isso vale mais do que dobrar o número de categorias — e encaixa naturalmente no estado de rodada no servidor (item 2).
