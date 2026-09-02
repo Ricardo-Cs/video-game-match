@@ -12,5 +12,10 @@
         "skipLibCheck": true,
         "moduleResolution": "node16",
         "outDir": "dist"
-    }
+    },
+    "exclude": [
+        "node_modules",
+        "dist",
+        "src/**/*.test.ts"
+    ]
 }
