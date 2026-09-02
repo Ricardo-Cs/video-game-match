@@ -1,26 +1,14 @@
-import React from 'react';
+import Button from '@mui/material/Button';
 import { Link } from 'react-router-dom';
-import '../styles/home.css';
 
-const Home: React.FC = () => {
+import { PagePanel } from '@/components/PagePanel';
+
+export function Home() {
   return (
-    <div className="home-container">
-      <div className="home-content">
-        <span>Video Game Match</span>
-        <p>Escolha um modo para jogar</p>
-
-        <div className="home-buttons">
-          <Link to="/singleplayer">
-            <button>Singleplayer</button>
-          </Link>
-
-          <Link to="/multiplayer">
-            <button disabled>Multiplayer</button>
-          </Link>
-        </div>
-      </div>
-    </div>
+    <PagePanel title="Video Game Match" subtitle="Comece uma partida">
+      <Button component={Link} to="/singleplayer" variant="contained" size="large">
+        Singleplayer
+      </Button>
+    </PagePanel>
   );
-};
-
-export default Home;
+}

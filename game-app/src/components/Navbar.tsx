@@ -1,20 +1,40 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import '../styles/navBar.css';
 import VideogameAssetIcon from '@mui/icons-material/VideogameAsset';
+import AppBar from '@mui/material/AppBar';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import { NavLink } from 'react-router-dom';
 
-const Navbar: React.FC = () => (
-  <nav className="navbar">
-    <div className="navbar-brand">
-      <VideogameAssetIcon />
-      <span>VideogameMatch</span>
-    </div>
-    <div className="navbar-links">
-      <Link to="/">Início</Link>
-      <Link to="/singleplayer">Singleplayer</Link>
-      <Link to="/multiplayer">Multiplayer</Link>
-    </div>
-  </nav>
-);
+const LINKS = [
+  { to: '/', label: 'Início', end: true },
+  { to: '/singleplayer', label: 'Singleplayer', end: false },
+];
 
-export default Navbar;
+export function Navbar() {
+  return (
+    <AppBar position="static" color="primary" elevation={1}>
+      <Toolbar sx={{ gap: 2 }}>
+        <VideogameAssetIcon />
+        <Typography variant="h6" component="span" sx={{ flexGrow: 1 }}>
+          VideogameMatch
+        </Typography>
+
+        <Box component="nav" sx={{ display: 'flex', gap: 1 }}>
+          {LINKS.map(({ to, label, end }) => (
+            <Button
+              key={to}
+              component={NavLink}
+              to={to}
+              end={end}
+              color="inherit"
+              sx={{ '&.active': { textDecoration: 'underline' } }}
+            >
+              {label}
+            </Button>
+          ))}
+        </Box>
+      </Toolbar>
+    </AppBar>
+  );
+}
