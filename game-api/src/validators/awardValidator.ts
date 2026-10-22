@@ -1,4 +1,5 @@
 import { prisma } from "../config/prisma";
+import { AppError } from "../errors/AppError";
 
 export const awardValidator = async (answerGame: string, conditionAward: string): Promise<boolean> => {
     const [game, award] = await Promise.all([
@@ -8,7 +9,8 @@ export const awardValidator = async (answerGame: string, conditionAward: string)
 
     if (!game) return false;
 
-    if (!award) throw new Error('Premiação não existe no banco de dados!');
+    // Enquanto o cliente envia as categorias, um prêmio desconhecido é erro da requisição
+    if (!award) throw new AppError(`Premiação inexistente: ${conditionAward}`, 400);
 
     const gameAward = await prisma.game_award.findFirst({
         where: {

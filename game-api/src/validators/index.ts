@@ -1,3 +1,4 @@
+import { AppError } from "../errors/AppError";
 import { answerData, checkAnswerType, GameCheckApiResponse } from "../types/types";
 import { awardValidator } from "./awardValidator";
 import { companyValidator } from "./developersValidator";
@@ -30,8 +31,12 @@ export const checkAnswer = async (apiResponse: GameCheckApiResponse, data: answe
                 return gameModeValidator(apiResponse.game_modes?.map((mode) => mode.name), value as string);
             case "dlcs":
                 return dlcsValidator(apiResponse.dlcs);
-            default:
-                return false;
+            default: {
+                // O z.enum barra tipos desconhecidos na borda; o `never` faz o TS
+                // acusar um tipo novo em CATEGORY_TYPES que ficou sem case aqui
+                const unhandledType: never = category.type;
+                throw new AppError(`Tipo de categoria sem validador: ${unhandledType}`);
+            }
         }
     }));
 

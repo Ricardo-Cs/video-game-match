@@ -1,12 +1,17 @@
+import type { CATEGORY_TYPES, CONDITION_OPERATORS } from "../schemas/gameSchemas";
+
+export type CategoryType = typeof CATEGORY_TYPES[number];
+export type ConditionOperator = typeof CONDITION_OPERATORS[number];
+
 export interface Condition {
     field: string,
-    operator: string,
+    operator: ConditionOperator,
     value: string | number;
 };
 
 export interface Category {
     name: string,
-    type: string,
+    type: CategoryType,
     condition: Condition
 };
 
@@ -15,7 +20,7 @@ export interface CategoriesData {
 };
 
 export interface answerData {
-    id: string,
+    id: number,
     categories: Category[]
 }
 

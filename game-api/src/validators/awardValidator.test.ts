@@ -56,17 +56,14 @@ describe("awardValidator", () => {
         expect(gameAwardFindFirst).not.toHaveBeenCalled();
     });
 
-    /**
-     * Item 8 da revisão: prêmio inexistente lança Error genérico, que o
-     * errorHandler transforma em 500 opaco. É erro de dados nossos, não do
-     * jogador — deveria ser AppError (ou false). Fica registrado até corrigir.
-     */
-    it("hoje lança Error genérico quando o prêmio não existe no banco", async () => {
+    // Enquanto as categorias vêm do cliente, prêmio desconhecido é requisição inválida (400), não 500
+    it("lança AppError 400 quando o prêmio não existe no banco", async () => {
         gameFindFirst.mockResolvedValue(GAME);
         awardFindFirst.mockResolvedValue(null);
 
-        await expect(awardValidator(GAME.name, "Prêmio Inexistente")).rejects.toThrow(
-            "Premiação não existe no banco de dados!",
-        );
+        await expect(awardValidator(GAME.name, "Prêmio Inexistente")).rejects.toMatchObject({
+            name: "AppError",
+            statusCode: 400,
+        });
     });
 });

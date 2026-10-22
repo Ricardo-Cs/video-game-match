@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { Category, GameCheckApiResponse, answerData } from "../types/types";
+import { AppError } from "../errors/AppError";
+import { Category, CategoryType, ConditionOperator, GameCheckApiResponse, answerData } from "../types/types";
 import { awardValidator } from "./awardValidator";
 import { checkAnswer } from "./index";
 
@@ -22,14 +23,14 @@ const GAME: GameCheckApiResponse = {
     cover: { id: 5, url: "//images.igdb.com/capa.jpg" },
 };
 
-const category = (type: string, operator: string, value: string | number): Category => ({
+const category = (type: CategoryType, operator: ConditionOperator, value: string | number): Category => ({
     name: `categoria ${type}`,
     type,
     condition: { field: type, operator, value },
 });
 
 const answer = (...categories: Category[]): answerData => ({
-    id: String(GAME.id),
+    id: GAME.id,
     categories,
 });
 
@@ -100,14 +101,13 @@ describe("checkAnswer", () => {
     });
 
     /**
-     * Item 5 da revisão: `category.type` é z.string() livre e o switch tem
-     * `default: return false`. Um tipo escrito errado vira "resposta
-     * incorreta" sem log nenhum — o jogador perde a rodada por bug nosso.
+     * O z.enum barra tipo desconhecido na borda. Se mesmo assim um chegar ao
+     * checkAnswer, é bug nosso: falha alto em vez de virar "resposta incorreta".
      */
-    it("trata tipo de categoria desconhecido como resposta errada, em silêncio", async () => {
-        const result = await checkAnswer(GAME, answer(category("genero", "includes", "Role-playing (RPG)")));
-
-        expect(result).toEqual({ answer: false, message: "Resposta incorreta!" });
+    it("lança AppError para tipo de categoria sem validador", async () => {
+        await expect(
+            checkAnswer(GAME, answer(category("genero" as CategoryType, "includes", "Role-playing (RPG)"))),
+        ).rejects.toThrow(AppError);
     });
 
     /**
