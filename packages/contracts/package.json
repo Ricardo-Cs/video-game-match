@@ -1,0 +1,19 @@
+{
+  "name": "@vgm/contracts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Schemas Zod e tipos compartilhados entre a API e o web",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "typescript": "catalog:"
+  }
+}

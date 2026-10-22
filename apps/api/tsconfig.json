@@ -1,0 +1,24 @@
+{
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "compilerOptions": {
+        "lib": [
+            "es2023"
+        ],
+        "types": [
+            "node"
+        ],
+        // O build é feito pelo esbuild (build.mjs); o tsc só verifica tipos
+        "module": "preserve",
+        "moduleResolution": "bundler",
+        "target": "es2022",
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "noEmit": true
+    },
+    "include": [
+        "src"
+    ]
+}

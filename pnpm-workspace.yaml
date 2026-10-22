@@ -1,0 +1,20 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Versões compartilhadas: os package.json referenciam com "catalog:".
+# O zod precisa ser o mesmo em todo lugar, já que os schemas cruzam pacotes.
+catalog:
+  typescript: ~5.9.3
+  zod: ^4.1.11
+  vitest: ^4.1.11
+
+# Proteção contra pacote comprometido: só instala versões publicadas há 7+ dias
+minimumReleaseAge: 10080
+
+# Dependências autorizadas a rodar scripts de instalação
+allowBuilds:
+  esbuild: true
+  prisma: true
+  "@prisma/client": true
+  "@prisma/engines": true
