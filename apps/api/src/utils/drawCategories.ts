@@ -1,8 +1,7 @@
 import type { Category } from "@vgm/contracts";
 import { AppError } from "../errors/AppError";
+import { CATEGORIES_PER_ROUND } from "./roundGrid";
 import { createSeededRandom, shuffle } from "./seededRandom";
-
-export const CATEGORIES_PER_ROUND = 6;
 
 // Pares sem nenhum jogo que satisfaça os dois ao mesmo tempo
 const INCOMPATIBLE_CATEGORY_PAIRS: readonly (readonly [string, string])[] = [

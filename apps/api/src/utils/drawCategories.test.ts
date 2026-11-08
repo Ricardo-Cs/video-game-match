@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import type { Category } from "@vgm/contracts";
 import { getCategoriesData } from "../repositories/categoriesRepository";
-import { CATEGORIES_PER_ROUND, drawCategories } from "./drawCategories";
+import { drawCategories } from "./drawCategories";
+import { CATEGORIES_PER_ROUND } from "./roundGrid";
 
 const CATALOG = getCategoriesData().categories;
 

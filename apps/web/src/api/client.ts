@@ -10,15 +10,10 @@ export class ApiError extends Error {
   }
 }
 
-/**
- * A API responde erro como `{ message }`, mas a rota inexistente devolve
- * uma string JSON crua — os dois formatos caem aqui.
- */
 async function readErrorMessage(response: Response): Promise<string> {
   try {
     const body: unknown = await response.json();
 
-    if (typeof body === 'string') return body;
     if (body && typeof body === 'object' && 'message' in body) {
       return String((body as { message: unknown }).message);
     }

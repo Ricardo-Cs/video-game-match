@@ -1,17 +1,19 @@
 import { Router } from "express";
-import { createCategoriesController, searchGameController, verifyAnswerController } from "../controllers/gameController";
+import { createGuessSchema, roundParamsSchema, searchParamsSchema } from "@vgm/contracts";
+import { searchGameController } from "../controllers/gameController";
+import { getRoundController, startRoundController, submitGuessController } from "../controllers/roundController";
 import { validateBody, validateParams } from "../middlewares/validateRequest";
-import { searchParamsSchema, verifyAnswerSchema } from "@vgm/contracts";
 
 const router = Router();
 
 router.get("/game/search/:search", validateParams(searchParamsSchema), searchGameController);
-router.get("/game/createCategories", createCategoriesController);
-router.post("/game/verifyAnswer", validateBody(verifyAnswerSchema), verifyAnswerController);
 
-// Handler de "rota não encontrada" (sem path, compatível com Express 5)
+router.post("/rounds", startRoundController);
+router.get("/rounds/:id", validateParams(roundParamsSchema), getRoundController);
+router.post("/rounds/:id/guesses", validateParams(roundParamsSchema), validateBody(createGuessSchema), submitGuessController);
+
 router.use((_req, res) => {
-    return res.status(404).json("Rota inexistente!");
+    res.status(404).json({ message: "Rota inexistente." });
 });
 
 export default router;

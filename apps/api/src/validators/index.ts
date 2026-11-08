@@ -1,4 +1,4 @@
-import type { AnswerResult, CategoryType, Condition, VerifyAnswerData } from "@vgm/contracts";
+import type { Category, CategoryType, Condition } from "@vgm/contracts";
 import { AppError } from "../errors/AppError";
 import { GameCheckApiResponse } from "../types/types";
 import { awardValidator } from "./awardValidator";
@@ -39,14 +39,13 @@ const findValidator = (type: CategoryType): CategoryValidator => {
     return categoryValidators[type];
 };
 
-export const checkAnswer = async (game: GameCheckApiResponse, data: VerifyAnswerData): Promise<AnswerResult> => {
+export const matchesAllCategories = async (
+    game: GameCheckApiResponse,
+    categories: readonly Category[],
+): Promise<boolean> => {
     const results = await Promise.all(
-        data.categories.map(({ type, condition }) => findValidator(type)(game, condition)),
+        categories.map(({ type, condition }) => findValidator(type)(game, condition)),
     );
 
-    const isCorrect = results.every(Boolean);
-
-    return isCorrect
-        ? { answer: true, image: game.cover?.url ?? null }
-        : { answer: false, message: "Resposta incorreta!" };
+    return results.every(Boolean);
 };

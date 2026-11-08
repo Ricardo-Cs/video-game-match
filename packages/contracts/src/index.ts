@@ -41,22 +41,56 @@ export const gameSearchResultSchema = z.object({
 
 export type GameSearchResult = z.infer<typeof gameSearchResultSchema>;
 
-// --- Verificação de resposta ---
+// --- Rodadas ---
 
-export const verifyAnswerSchema = z.object({
-    // Vai direto para a query da IGDB, então só aceita inteiro positivo
-    id: z.coerce.number().int().positive(),
-    categories: z.array(categorySchema).min(1, "Envie ao menos uma categoria."),
+export const GRID_SIZE = 3;
+export const CELL_COUNT = GRID_SIZE * GRID_SIZE;
+export const ROUND_STATUSES = ["IN_PROGRESS", "FINISHED"] as const;
+
+// Células numeradas por linha: 0 1 2 / 3 4 5 / 6 7 8
+export const cellIndexSchema = z.number().int().min(0).max(CELL_COUNT - 1);
+
+export const roundParamsSchema = z.object({
+    id: z.uuid("Rodada inválida."),
 });
 
-// O que o cliente envia (id pode chegar como string) e o que a API recebe já validado
-export type VerifyAnswerInput = z.input<typeof verifyAnswerSchema>;
-export type VerifyAnswerData = z.output<typeof verifyAnswerSchema>;
-
-export const answerResultSchema = z.object({
-    answer: z.boolean(),
-    image: z.string().nullable().optional(),
-    message: z.string().optional(),
+export const createGuessSchema = z.object({
+    cell: cellIndexSchema,
+    gameId: z.coerce.number().int().positive(),
 });
 
-export type AnswerResult = z.infer<typeof answerResultSchema>;
+// O cliente só precisa saber o que exibir; a condição de cada categoria fica no servidor
+export const categoryViewSchema = categorySchema.pick({ name: true, type: true });
+
+export const solvedCellSchema = z.object({
+    cell: cellIndexSchema,
+    game: z.object({
+        id: z.number(),
+        name: z.string(),
+        coverUrl: z.string().nullable(),
+    }),
+});
+
+export const roundViewSchema = z.object({
+    id: z.string(),
+    status: z.enum(ROUND_STATUSES),
+    rows: z.array(categoryViewSchema),
+    columns: z.array(categoryViewSchema),
+    maxAttempts: z.number(),
+    attemptsUsed: z.number(),
+    solvedCells: z.array(solvedCellSchema),
+});
+
+export const guessResultSchema = z.object({
+    correct: z.boolean(),
+    round: roundViewSchema,
+});
+
+export type CellIndex = z.infer<typeof cellIndexSchema>;
+export type RoundStatus = typeof ROUND_STATUSES[number];
+export type CreateGuessInput = z.input<typeof createGuessSchema>;
+export type CreateGuessData = z.output<typeof createGuessSchema>;
+export type CategoryView = z.infer<typeof categoryViewSchema>;
+export type SolvedCell = z.infer<typeof solvedCellSchema>;
+export type RoundView = z.infer<typeof roundViewSchema>;
+export type GuessResult = z.infer<typeof guessResultSchema>;

@@ -36,14 +36,14 @@ Maior mudança de arquitetura: fecha a trapaça (hoje o cliente envia as categor
 - [x] Tabela `Round`: as 6 categorias sorteadas (snapshot em JSONB), seed, limite de tentativas e status
 - [x] Tabela `Guess`: rodada, célula, `igdb_game_id`, acerto/erro — índices únicos parciais garantem no banco um acerto por célula e o mesmo jogo em no máximo uma célula
 - [x] Tabela `GameCache`: resposta da IGDB por jogo, com `expires_at`
-- [ ] `POST /rounds`: sorteia e persiste a rodada (substitui `GET /game/createCategories`)
-- [ ] `POST /rounds/:id/guesses`: recebe só `{ cell, gameId }`; o servidor valida com as categorias que ele mesmo guardou (substitui `POST /game/verifyAnswer`)
-- [ ] Regra: o mesmo jogo não vale em duas células
-- [ ] Regra: limite de tentativas por rodada
-- [ ] Cache da IGDB por `gameId` (reduz latência, cota e dependência de rede)
+- [x] `POST /rounds`: sorteia e persiste a rodada (substitui `GET /game/createCategories`); `GET /rounds/:id` devolve o estado atual
+- [x] `POST /rounds/:id/guesses`: recebe só `{ cell, gameId }`; o servidor valida com as categorias que ele mesmo guardou (substitui `POST /game/verifyAnswer`)
+- [x] Regra: o mesmo jogo não vale em duas células
+- [x] Regra: limite de tentativas por rodada (9), garantido com trava da rodada na transação
+- [x] Cache da IGDB por `gameId`, válido por 7 dias
 - [x] `drawCategories` com sorteio determinístico por seed (embaralhar e pegar os compatíveis), sem `while` infinito — teste de catálogo insuficiente reativado
 - [x] Registry `Record<CategoryType, CategoryValidator>` no lugar do `switch` do `checkAnswer`
-- [ ] Atualizar `@vgm/contracts` com os formatos de rodada e palpite
+- [x] Atualizar `@vgm/contracts` com os formatos de rodada e palpite
 
 ### Etapa 4 — Grade jogável no web
 
@@ -52,7 +52,7 @@ Hoje `apps/web/src/pages/Singleplayer.tsx` é um placeholder.
 - [ ] Grade 3×3 com categorias nas linhas e colunas
 - [ ] Busca com autocomplete e *debounce*
 - [ ] Estado de cada célula (vazia, acerto, erro)
-- [ ] Capa do jogo acertado em tamanho maior (trocar `t_thumb` por `t_cover_big` na URL da IGDB)
+- [x] Capa do jogo acertado em tamanho maior (`t_cover_big`, já devolvida pela API em `solvedCells`)
 - [ ] Contador de tentativas e tela de fim de jogo
 - [ ] Layout mobile-first
 
@@ -62,7 +62,7 @@ Hoje `apps/web/src/pages/Singleplayer.tsx` é um placeholder.
 - [ ] Condições por id da IGDB, não por nome (corrige casos como `"FromSoftware."`)
 - [ ] Prêmios ligados por `igdb_id` em vez do nome do jogo; passar a usar o ano (`game_award.year`)
 - [ ] Novas categorias: temas, perspectiva, franquia, faixa de nota, modos multiplayer, geração de console
-- [ ] Campos buscados na IGDB derivados das categorias da rodada (hoje a lista em `getGameById` é fixa)
+- [ ] Campos buscados na IGDB derivados das categorias da rodada (hoje a lista em `getGameById` é fixa) — ao mudar os campos, invalidar o `game_cache` (entradas antigas não têm os campos novos)
 - [ ] Incompatibilidades deduzidas da condição (mesmo tipo + faixas excludentes), não listadas à mão
 - [ ] Rodada sempre solucionável: checar com `POST /games/count` da IGDB que cada célula tem resposta antes de servir a grade (serve também como métrica de dificuldade)
 
@@ -73,7 +73,7 @@ Hoje `apps/web/src/pages/Singleplayer.tsx` é um placeholder.
 **Segurança e observabilidade**
 - [ ] `helmet`, CORS restrito à origem do web, rate limit
 - [ ] Logs estruturados com pino
-- [ ] Rota 404 respondendo `{ message }`, como as demais
+- [x] Rota 404 respondendo `{ message }`, como as demais
 
 **CI e deploy**
 - [ ] GitHub Actions: typecheck, testes e lint
@@ -93,7 +93,7 @@ Hoje `apps/web/src/pages/Singleplayer.tsx` é um placeholder.
 
 Versões major disponíveis, sem vulnerabilidade, adiadas por exigirem migração própria:
 
-- [ ] `@mui/material` / `@mui/icons-material` 7 → 9 — fazer antes da grade da etapa 4, enquanto há pouca UI
+- [x] `@mui/material` / `@mui/icons-material` 7 → 9 — system props removidas (usar `sx`); navegadores mínimos: Chrome 117, Firefox 121, Safari 17
 - [ ] `vite` 7 → 8 (Rolldown) junto com `@vitejs/plugin-react` 5 → 6
 - [ ] `vitest` 4 → 5
 - [ ] `typescript` 5.9 → 7 (compilador nativo em Go)

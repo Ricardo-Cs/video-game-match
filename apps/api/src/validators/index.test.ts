@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AppError } from "../errors/AppError";
-import type { Category, CategoryType, ConditionOperator, VerifyAnswerData } from "@vgm/contracts";
+import type { Category, CategoryType, ConditionOperator } from "@vgm/contracts";
 import { GameCheckApiResponse } from "../types/types";
 import { awardValidator } from "./awardValidator";
-import { checkAnswer } from "./index";
+import { matchesAllCategories } from "./index";
 
 // O awardValidator é o único que vai ao banco; aqui só interessa se o
-// checkAnswer roteia para ele e aguarda o resultado.
+// matchesAllCategories roteia para ele e aguarda o resultado.
 vi.mock("./awardValidator", () => ({ awardValidator: vi.fn() }));
 
 const mockedAwardValidator = vi.mocked(awardValidator);
@@ -30,86 +30,64 @@ const category = (type: CategoryType, operator: ConditionOperator, value: string
     condition: { field: type, operator, value },
 });
 
-const answer = (...categories: Category[]): VerifyAnswerData => ({
-    id: GAME.id,
-    categories,
-});
-
 beforeEach(() => {
     vi.resetAllMocks();
 });
 
-describe("checkAnswer", () => {
-    it("aceita quando todas as categorias batem e devolve a capa", async () => {
-        const result = await checkAnswer(
-            GAME,
-            answer(
-                category("genre", "includes", "Role-playing (RPG)"),
-                category("platform", "includes", "PC (Microsoft Windows)"),
-                category("releaseYear", "<", 2020),
-                category("dlcs", "includes", "dlcs"),
-            ),
-        );
+describe("matchesAllCategories", () => {
+    it("aceita quando todas as categorias batem", async () => {
+        const result = await matchesAllCategories(GAME, [
+            category("genre", "includes", "Role-playing (RPG)"),
+            category("platform", "includes", "PC (Microsoft Windows)"),
+            category("releaseYear", "<", 2020),
+            category("dlcs", "includes", "dlcs"),
+        ]);
 
-        expect(result).toEqual({ answer: true, image: "//images.igdb.com/capa.jpg" });
+        expect(result).toBe(true);
     });
 
     it("recusa se uma única categoria falha", async () => {
-        const result = await checkAnswer(
-            GAME,
-            answer(
-                category("genre", "includes", "Role-playing (RPG)"),
-                category("genre", "includes", "Puzzle"),
-            ),
-        );
+        const result = await matchesAllCategories(GAME, [
+            category("genre", "includes", "Role-playing (RPG)"),
+            category("genre", "includes", "Puzzle"),
+        ]);
 
-        expect(result).toEqual({ answer: false, message: "Resposta incorreta!" });
-    });
-
-    it("devolve image null quando a IGDB não trouxe capa", async () => {
-        const { cover: _cover, ...semCapa } = GAME;
-
-        const result = await checkAnswer(semCapa, answer(category("genre", "includes", "Role-playing (RPG)")));
-
-        expect(result).toEqual({ answer: true, image: null });
+        expect(result).toBe(false);
     });
 
     it("converte first_release_date (epoch em segundos) para ano", async () => {
         await expect(
-            checkAnswer(GAME, answer(category("releaseYear", ">=", 2015))),
-        ).resolves.toMatchObject({ answer: true });
+            matchesAllCategories(GAME, [category("releaseYear", ">=", 2015)]),
+        ).resolves.toBe(true);
 
         await expect(
-            checkAnswer(GAME, answer(category("releaseYear", ">", 2015))),
-        ).resolves.toMatchObject({ answer: false });
+            matchesAllCategories(GAME, [category("releaseYear", ">", 2015)]),
+        ).resolves.toBe(false);
     });
 
     it("recusa releaseYear quando a IGDB omitiu a data", async () => {
         const { first_release_date: _date, ...semData } = GAME;
 
         await expect(
-            checkAnswer(semData, answer(category("releaseYear", "<", 2020))),
-        ).resolves.toMatchObject({ answer: false });
+            matchesAllCategories(semData, [category("releaseYear", "<", 2020)]),
+        ).resolves.toBe(false);
     });
 
     it("aguarda o awardValidator, que é assíncrono", async () => {
         mockedAwardValidator.mockResolvedValue(true);
 
-        const result = await checkAnswer(GAME, answer(category("award", "includes", "Game Of The Year")));
+        const result = await matchesAllCategories(GAME, [category("award", "includes", "Game Of The Year")]);
 
         expect(mockedAwardValidator).toHaveBeenCalledWith(GAME.name, "Game Of The Year");
-        expect(result).toMatchObject({ answer: true });
+        expect(result).toBe(true);
     });
 
-    /**
-     * O z.enum barra tipo desconhecido na borda. Se mesmo assim um chegar ao
-     * checkAnswer, é bug nosso: falha alto em vez de virar "resposta incorreta".
-     */
+    // O z.enum barra tipo desconhecido na borda; se um chegar aqui, é bug nosso e deve falhar alto
     it.each(["genero", "toString", "constructor"])(
         "lança AppError para o tipo de categoria sem validador %j",
         async (unknownType) => {
             await expect(
-                checkAnswer(GAME, answer(category(unknownType as CategoryType, "includes", "Role-playing (RPG)"))),
+                matchesAllCategories(GAME, [category(unknownType as CategoryType, "includes", "Role-playing (RPG)")]),
             ).rejects.toThrow(AppError);
         },
     );
@@ -126,7 +104,7 @@ describe("checkAnswer", () => {
         };
 
         await expect(
-            checkAnswer(publicadoPelaNintendo, answer(category("company", "includes", "Nintendo"))),
-        ).resolves.toMatchObject({ answer: true });
+            matchesAllCategories(publicadoPelaNintendo, [category("company", "includes", "Nintendo")]),
+        ).resolves.toBe(true);
     });
 });

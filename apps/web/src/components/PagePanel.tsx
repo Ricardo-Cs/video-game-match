@@ -13,7 +13,7 @@ interface PagePanelProps {
 export function PagePanel({ title, subtitle, children }: PagePanelProps) {
   return (
     <Paper elevation={2} sx={{ p: 4, maxWidth: 640, width: '100%' }}>
-      <Stack spacing={2} alignItems="center" textAlign="center">
+      <Stack spacing={2} sx={{ alignItems: 'center', textAlign: 'center' }}>
         <Typography variant="h4" component="h1">
           {title}
         </Typography>

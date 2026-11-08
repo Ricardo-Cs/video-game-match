@@ -75,6 +75,9 @@ model Guess {
   cell       Int      @db.SmallInt
   igdbGameId Int      @map("igdb_game_id")
   correct    Boolean
+  // Snapshot do jogo no momento do palpite: a grade é exibida sem consultar a IGDB
+  gameName   String   @map("game_name")
+  coverUrl   String?  @map("cover_url")
   createdAt  DateTime @default(now()) @map("created_at")
   round      Round    @relation(fields: [roundId], references: [id], onDelete: Cascade)
 

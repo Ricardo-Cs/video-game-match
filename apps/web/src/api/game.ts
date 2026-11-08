@@ -1,15 +1,11 @@
 import type {
-  AnswerResult,
-  Category,
+  CreateGuessInput,
   GameSearchResult,
-  VerifyAnswerInput,
+  GuessResult,
+  RoundView,
 } from '@vgm/contracts';
 
 import { request } from '@/api/client';
-
-export function createCategories(signal?: AbortSignal) {
-  return request<Category[]>('/game/createCategories', { signal });
-}
 
 export function searchGames(search: string, signal?: AbortSignal) {
   return request<GameSearchResult[]>(
@@ -18,9 +14,17 @@ export function searchGames(search: string, signal?: AbortSignal) {
   );
 }
 
-export function verifyAnswer(payload: VerifyAnswerInput) {
-  return request<AnswerResult>('/game/verifyAnswer', {
+export function startRound() {
+  return request<RoundView>('/rounds', { method: 'POST' });
+}
+
+export function getRound(roundId: string, signal?: AbortSignal) {
+  return request<RoundView>(`/rounds/${roundId}`, { signal });
+}
+
+export function submitGuess(roundId: string, guess: CreateGuessInput) {
+  return request<GuessResult>(`/rounds/${roundId}/guesses`, {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: JSON.stringify(guess),
   });
 }
