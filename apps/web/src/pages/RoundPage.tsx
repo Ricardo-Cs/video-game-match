@@ -15,6 +15,7 @@ import { GameSearchDialog } from '@/components/round/GameSearchDialog';
 import { RoundGrid } from '@/components/round/RoundGrid';
 import { RoundSummary } from '@/components/round/RoundSummary';
 import { useStartNewRound } from '@/hooks/useStartNewRound';
+import { buildGuessFeedback, type GuessFeedback } from '@/utils/guessFeedback';
 import {
   attemptsLeft,
   buildCellStates,
@@ -23,12 +24,7 @@ import {
   usedGameIdsOf,
 } from '@/utils/roundCells';
 
-const FEEDBACK_DURATION_MS = 3000;
-
-interface GuessFeedback {
-  isCorrect: boolean;
-  message: string;
-}
+const FEEDBACK_DURATION_MS = 4000;
 
 export function RoundPage() {
   const { roundId = '' } = useParams();
@@ -67,19 +63,13 @@ export function RoundPage() {
 
   const submitGuess = (game: GameSearchResult) => {
     if (selectedCell === null || !selectedCategories) return;
-    const [row, column] = selectedCategories;
 
     guessMutation.mutate(
       { cell: selectedCell, gameId: game.id },
       {
-        onSuccess: ({ correct }) => {
+        onSuccess: (result) => {
           setSelectedCell(null);
-          setFeedback({
-            isCorrect: correct,
-            message: correct
-              ? `Acertou! ${game.name} vale para ${row.name} × ${column.name}.`
-              : `${game.name} não atende a ${row.name} × ${column.name}.`,
-          });
+          setFeedback(buildGuessFeedback(game.name, result, selectedCategories));
         },
       },
     );

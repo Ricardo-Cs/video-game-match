@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Category } from "@vgm/contracts";
 import { createRound, findRoundById, recordGuess, type RoundWithGuesses } from "../repositories/roundRepository";
-import { matchesAllCategories } from "../validators";
+import { findUnmetCategories } from "../validators";
 import { findGameById } from "./gameLookupService";
 import { getRound, MAX_ATTEMPTS_PER_ROUND, startRound, submitGuess } from "./roundService";
 
@@ -11,7 +11,7 @@ vi.mock("../repositories/roundRepository", () => ({
     findRoundById: vi.fn(),
     recordGuess: vi.fn(),
 }));
-vi.mock("../validators", () => ({ matchesAllCategories: vi.fn() }));
+vi.mock("../validators", () => ({ findUnmetCategories: vi.fn() }));
 vi.mock("./gameLookupService", () => ({ findGameById: vi.fn() }));
 
 const ROUND_ID = "0193a5b2-0000-7000-8000-000000000001";
@@ -117,20 +117,21 @@ describe("submitGuess", () => {
     });
 
     it("valida o jogo só contra a linha e a coluna da célula", async () => {
-        vi.mocked(matchesAllCategories).mockResolvedValue(true);
+        vi.mocked(findUnmetCategories).mockResolvedValue([]);
 
         await submitGuess(ROUND_ID, { cell: 5, gameId: GAME.id });
 
-        const [, categories] = vi.mocked(matchesAllCategories).mock.calls[0];
+        const [, categories] = vi.mocked(findUnmetCategories).mock.calls[0];
         expect(categories.map((category) => category.name)).toEqual(["linha1", "coluna2"]);
     });
 
     it("registra o palpite certo com nome e capa do jogo", async () => {
-        vi.mocked(matchesAllCategories).mockResolvedValue(true);
+        vi.mocked(findUnmetCategories).mockResolvedValue([]);
 
         const result = await submitGuess(ROUND_ID, { cell: 0, gameId: GAME.id });
 
         expect(result.correct).toBe(true);
+        expect(result.unmetCategories).toEqual([]);
         expect(recordGuess).toHaveBeenCalledWith(ROUND_ID, {
             cell: 0,
             igdbGameId: GAME.id,
@@ -141,12 +142,20 @@ describe("submitGuess", () => {
     });
 
     it("registra o palpite errado, que também gasta tentativa", async () => {
-        vi.mocked(matchesAllCategories).mockResolvedValue(false);
+        vi.mocked(findUnmetCategories).mockResolvedValue([CATEGORIES[3]]);
 
         const result = await submitGuess(ROUND_ID, { cell: 0, gameId: GAME.id });
 
         expect(result.correct).toBe(false);
         expect(recordGuess).toHaveBeenCalledWith(ROUND_ID, expect.objectContaining({ correct: false }));
+    });
+
+    it("diz qual categoria o jogo não atendeu, sem expor a condição", async () => {
+        vi.mocked(findUnmetCategories).mockResolvedValue([CATEGORIES[3]]);
+
+        const result = await submitGuess(ROUND_ID, { cell: 0, gameId: GAME.id });
+
+        expect(result.unmetCategories).toEqual([{ name: "coluna0", type: "genre" }]);
     });
 
     it("recusa jogada inválida antes de consultar a IGDB", async () => {

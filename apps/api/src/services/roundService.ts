@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { categorySchema, type Category, type CreateGuessData, type GuessResult, type RoundView } from "@vgm/contracts";
+import { categorySchema, type Category, type CategoryView, type CreateGuessData, type GuessResult, type RoundView } from "@vgm/contracts";
 import { AppError } from "../errors/AppError";
 import { getCategoriesData } from "../repositories/categoriesRepository";
 import { createRound, findRoundById, recordGuess, type RoundWithGuesses } from "../repositories/roundRepository";
@@ -8,7 +8,7 @@ import { drawCategories } from "../utils/drawCategories";
 import { coverUrlOf } from "../utils/igdbImages";
 import { CATEGORIES_PER_ROUND, categoriesOfCell, splitIntoRowsAndColumns } from "../utils/roundGrid";
 import { assertCanGuess, missedCellsOf } from "../utils/roundRules";
-import { matchesAllCategories } from "../validators";
+import { findUnmetCategories } from "../validators";
 import { findGameById } from "./gameLookupService";
 
 export const MAX_ATTEMPTS_PER_ROUND = 9;
@@ -17,9 +17,10 @@ const storedCategoriesSchema = z.array(categorySchema).length(CATEGORIES_PER_ROU
 
 const categoriesOf = (round: RoundWithGuesses): Category[] => storedCategoriesSchema.parse(round.categories);
 
+const toCategoryView = ({ name, type }: Category): CategoryView => ({ name, type });
+
 const toRoundView = (round: RoundWithGuesses): RoundView => {
     const { rows, columns } = splitIntoRowsAndColumns(categoriesOf(round));
-    const toCategoryView = ({ name, type }: Category) => ({ name, type });
 
     return {
         id: round.id,
@@ -61,7 +62,8 @@ export const submitGuess = async (roundId: string, { cell, gameId }: CreateGuess
     assertCanGuess(round, cell, gameId);
 
     const game = await findGameById(gameId);
-    const correct = await matchesAllCategories(game, categoriesOfCell(categoriesOf(round), cell));
+    const unmetCategories = await findUnmetCategories(game, categoriesOfCell(categoriesOf(round), cell));
+    const correct = unmetCategories.length === 0;
 
     const updatedRound = await recordGuess(roundId, {
         cell,
@@ -71,5 +73,5 @@ export const submitGuess = async (roundId: string, { cell, gameId }: CreateGuess
         coverUrl: coverUrlOf(game),
     });
 
-    return { correct, round: toRoundView(updatedRound) };
+    return { correct, unmetCategories: unmetCategories.map(toCategoryView), round: toRoundView(updatedRound) };
 };

@@ -85,6 +85,8 @@ export const roundViewSchema = z.object({
 
 export const guessResultSchema = z.object({
     correct: z.boolean(),
+    // Categorias da célula que o jogo não atendeu; vazia quando o palpite está certo
+    unmetCategories: z.array(categoryViewSchema),
     round: roundViewSchema,
 });
 

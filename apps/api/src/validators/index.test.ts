@@ -4,10 +4,10 @@ import { AppError } from "../errors/AppError";
 import type { Category, CategoryType, ConditionOperator } from "@vgm/contracts";
 import { GameCheckApiResponse } from "../types/types";
 import { awardValidator } from "./awardValidator";
-import { matchesAllCategories } from "./index";
+import { findUnmetCategories } from "./index";
 
 // O awardValidator é o único que vai ao banco; aqui só interessa se o
-// matchesAllCategories roteia para ele e aguarda o resultado.
+// findUnmetCategories roteia para ele e aguarda o resultado.
 vi.mock("./awardValidator", () => ({ awardValidator: vi.fn() }));
 
 const mockedAwardValidator = vi.mocked(awardValidator);
@@ -30,11 +30,23 @@ const category = (type: CategoryType, operator: ConditionOperator, value: string
     condition: { field: type, operator, value },
 });
 
+const matchesAllCategories = async (game: GameCheckApiResponse, categories: Category[]) =>
+    (await findUnmetCategories(game, categories)).length === 0;
+
 beforeEach(() => {
     vi.resetAllMocks();
 });
 
-describe("matchesAllCategories", () => {
+describe("findUnmetCategories", () => {
+    it("devolve só as categorias que o jogo não atende, na ordem recebida", async () => {
+        const rpg = category("genre", "includes", "Role-playing (RPG)");
+        const puzzle = category("genre", "includes", "Puzzle");
+        const before2010 = category("releaseYear", "<", 2010);
+
+        await expect(findUnmetCategories(GAME, [puzzle, rpg, before2010])).resolves.toEqual([puzzle, before2010]);
+    });
+
+
     it("aceita quando todas as categorias batem", async () => {
         const result = await matchesAllCategories(GAME, [
             category("genre", "includes", "Role-playing (RPG)"),
@@ -87,7 +99,7 @@ describe("matchesAllCategories", () => {
         "lança AppError para o tipo de categoria sem validador %j",
         async (unknownType) => {
             await expect(
-                matchesAllCategories(GAME, [category(unknownType as CategoryType, "includes", "Role-playing (RPG)")]),
+                findUnmetCategories(GAME, [category(unknownType as CategoryType, "includes", "Role-playing (RPG)")]),
             ).rejects.toThrow(AppError);
         },
     );

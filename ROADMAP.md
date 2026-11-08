@@ -55,7 +55,7 @@ Maior mudança de arquitetura: fecha a trapaça (hoje o cliente envia as categor
 - [x] Capa do jogo acertado em tamanho maior (`t_cover_big`, já devolvida pela API em `solvedCells`)
 - [x] Contador de tentativas e tela de fim de jogo
 - [x] Layout mobile-first
-- [ ] Aviso de erro diz qual categoria o jogo não atendeu (ex.: Dave the Diver concorreu, mas não venceu Melhor Jogo Indie 2023, e a mensagem atual não deixa claro que o DLC passou). Exige o resultado por categoria no `GuessResult`; deixa o jogo um pouco mais fácil, já que o erro revela parte da resposta
+- [x] Aviso de erro diz qual categoria o jogo não atendeu (`unmetCategories` no `GuessResult`), ex.: "Dave the Diver não atende a Vencedor de Melhor Jogo Indie". Deixa o jogo um pouco mais fácil, já que o erro revela parte da resposta
 
 ### Etapa 5 — Categorias melhores
 

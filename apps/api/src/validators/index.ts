@@ -39,13 +39,13 @@ const findValidator = (type: CategoryType): CategoryValidator => {
     return categoryValidators[type];
 };
 
-export const matchesAllCategories = async (
+export const findUnmetCategories = async (
     game: GameCheckApiResponse,
     categories: readonly Category[],
-): Promise<boolean> => {
+): Promise<Category[]> => {
     const results = await Promise.all(
         categories.map(({ type, condition }) => findValidator(type)(game, condition)),
     );
 
-    return results.every(Boolean);
+    return categories.filter((_category, index) => !results[index]);
 };
