@@ -29,10 +29,10 @@
 
 Maior mudança de arquitetura: fecha a trapaça (hoje o cliente envia as categorias e condições) e é pré-requisito das etapas seguintes.
 
-> **Decisão pendente:** manter **SQLite** (simples, sem Docker) ou migrar para **Postgres** (Docker local + Neon/Supabase no deploy). Recomendado: Postgres, se o objetivo é fazer deploy.
+> **Decisão tomada:** Postgres (Docker local via `docker-compose.yml` + Neon/Supabase no deploy).
 
-- [ ] Migrar para Prisma >= 7.10.1 (`prisma.config.ts`, novo gerador `prisma-client`, driver adapter) e remover o `overrides` de `deepmerge-ts` do `pnpm-workspace.yaml`
-- [ ] Migrations do Prisma versionadas; tirar `dev.db` do git; seed no lugar do `insert.sql` manual
+- [x] Migrar para Prisma 7.10.1 (`prisma.config.ts`, gerador `prisma-client`, driver adapter `pg`), Postgres e remoção do `overrides` de `deepmerge-ts`
+- [x] Migrations do Prisma versionadas; `dev.db` fora do git; seed idempotente (`pnpm --filter @vgm/api db:seed`) no lugar do `insert.sql`
 - [ ] Tabela `Round`: as 6 categorias sorteadas, data e seed
 - [ ] Tabela `Guess`: rodada, célula, `igdb_game_id`, acerto/erro
 - [ ] Tabela `GameCache`: resposta da IGDB por jogo, com TTL

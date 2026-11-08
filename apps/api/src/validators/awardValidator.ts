@@ -12,10 +12,10 @@ export const awardValidator = async (answerGame: string, conditionAward: string)
     // Enquanto o cliente envia as categorias, um prêmio desconhecido é erro da requisição
     if (!award) throw new AppError(`Premiação inexistente: ${conditionAward}`, 400);
 
-    const gameAward = await prisma.game_award.findFirst({
+    const gameAward = await prisma.gameAward.findFirst({
         where: {
-            game_id_fk: game.id,
-            award_id_fk: award.id
+            gameId: game.id,
+            awardId: award.id
         },
         include: { award: true }
     });

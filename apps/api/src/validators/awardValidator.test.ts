@@ -7,13 +7,13 @@ vi.mock("../config/prisma", () => ({
     prisma: {
         game: { findFirst: vi.fn() },
         award: { findFirst: vi.fn() },
-        game_award: { findFirst: vi.fn() },
+        gameAward: { findFirst: vi.fn() },
     },
 }));
 
 const gameFindFirst = vi.mocked(prisma.game.findFirst);
 const awardFindFirst = vi.mocked(prisma.award.findFirst);
-const gameAwardFindFirst = vi.mocked(prisma.game_award.findFirst);
+const gameAwardFindFirst = vi.mocked(prisma.gameAward.findFirst);
 
 const GAME = { id: 1, name: "Elden Ring" };
 const AWARD = { id: 7, name: "Game Of The Year" };
@@ -27,8 +27,8 @@ describe("awardValidator", () => {
         gameFindFirst.mockResolvedValue(GAME);
         awardFindFirst.mockResolvedValue(AWARD);
         gameAwardFindFirst.mockResolvedValue({
-            game_id_fk: GAME.id,
-            award_id_fk: AWARD.id,
+            gameId: GAME.id,
+            awardId: AWARD.id,
             year: 2022,
             award: AWARD,
         } as never);
@@ -45,7 +45,7 @@ describe("awardValidator", () => {
     });
 
     /**
-     * O prêmio sai do SQLite local, mas o jogo vem da IGDB: qualquer jogo fora
+     * O prêmio sai do Postgres, mas o jogo vem da IGDB: qualquer jogo fora
      * da curadoria do banco simplesmente não pontua nessa categoria.
      */
     it("recusa quando o jogo não existe no banco", async () => {
