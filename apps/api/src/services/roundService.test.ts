@@ -88,7 +88,7 @@ describe("startRound", () => {
 });
 
 describe("getRound", () => {
-    it("monta a grade com tentativas usadas e só as células acertadas", async () => {
+    it("monta a grade com tentativas usadas, células acertadas e células erradas", async () => {
         vi.mocked(findRoundById).mockResolvedValue(
             storedRound({ guesses: [storedGuess(0, 10, true), storedGuess(1, 20, false)] }),
         );
@@ -99,6 +99,7 @@ describe("getRound", () => {
         expect(view.columns.map((category) => category.name)).toEqual(["coluna0", "coluna1", "coluna2"]);
         expect(view.attemptsUsed).toBe(2);
         expect(view.solvedCells).toEqual([{ cell: 0, game: { id: 10, name: "Jogo 10", coverUrl: null } }]);
+        expect(view.missedCells).toEqual([1]);
     });
 
     it("lança AppError 404 para rodada inexistente", async () => {

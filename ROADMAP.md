@@ -47,14 +47,14 @@ Maior mudança de arquitetura: fecha a trapaça (hoje o cliente envia as categor
 
 ### Etapa 4 — Grade jogável no web
 
-Hoje `apps/web/src/pages/Singleplayer.tsx` é um placeholder.
+`/singleplayer` cria a rodada e leva a `/singleplayer/:roundId`, que sobrevive a um reload.
 
-- [ ] Grade 3×3 com categorias nas linhas e colunas
-- [ ] Busca com autocomplete e *debounce*
-- [ ] Estado de cada célula (vazia, acerto, erro)
+- [x] Grade 3×3 com categorias nas linhas e colunas
+- [x] Busca com autocomplete e *debounce*
+- [x] Estado de cada célula (vazia, acerto, erro) — `missedCells` no `RoundView`, derivado dos palpites no servidor
 - [x] Capa do jogo acertado em tamanho maior (`t_cover_big`, já devolvida pela API em `solvedCells`)
-- [ ] Contador de tentativas e tela de fim de jogo
-- [ ] Layout mobile-first
+- [x] Contador de tentativas e tela de fim de jogo
+- [x] Layout mobile-first
 
 ### Etapa 5 — Categorias melhores
 

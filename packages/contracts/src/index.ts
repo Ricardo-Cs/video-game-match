@@ -79,6 +79,8 @@ export const roundViewSchema = z.object({
     maxAttempts: z.number(),
     attemptsUsed: z.number(),
     solvedCells: z.array(solvedCellSchema),
+    // Células que receberam palpite errado e ainda não foram resolvidas
+    missedCells: z.array(cellIndexSchema),
 });
 
 export const guessResultSchema = z.object({

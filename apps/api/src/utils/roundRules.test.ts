@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { assertCanGuess, isRoundOver, type GuessRecord, type RoundState } from "./roundRules";
+import { assertCanGuess, isRoundOver, missedCellsOf, type GuessRecord, type RoundState } from "./roundRules";
 
 const correct = (cell: number, igdbGameId: number): GuessRecord => ({ cell, igdbGameId, correct: true });
 const wrong = (cell: number, igdbGameId: number): GuessRecord => ({ cell, igdbGameId, correct: false });
@@ -29,6 +29,20 @@ describe("isRoundOver", () => {
         const allCells = Array.from({ length: 9 }, (_, cell) => correct(cell, cell + 100));
 
         expect(isRoundOver(20, allCells)).toBe(true);
+    });
+});
+
+describe("missedCellsOf", () => {
+    it("lista sem repetição as células que só tiveram erros, em ordem", () => {
+        expect(missedCellsOf([wrong(4, 1), wrong(2, 2), wrong(4, 3)])).toEqual([2, 4]);
+    });
+
+    it("tira da lista a célula errada que depois foi acertada", () => {
+        expect(missedCellsOf([wrong(0, 1), correct(0, 2), wrong(1, 3)])).toEqual([1]);
+    });
+
+    it("devolve lista vazia sem palpites errados", () => {
+        expect(missedCellsOf([correct(0, 1)])).toEqual([]);
     });
 });
 

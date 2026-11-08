@@ -15,6 +15,16 @@ export interface RoundState {
 
 const correctGuesses = (guesses: readonly GuessRecord[]) => guesses.filter((guess) => guess.correct);
 
+// Uma célula errada deixa de contar como erro quando o jogador acaba acertando ela
+export const missedCellsOf = (guesses: readonly GuessRecord[]): CellIndex[] => {
+    const solvedCells = new Set(correctGuesses(guesses).map((guess) => guess.cell));
+    const missedCells = guesses
+        .filter((guess) => !guess.correct && !solvedCells.has(guess.cell))
+        .map((guess) => guess.cell);
+
+    return [...new Set(missedCells)].sort((a, b) => a - b);
+};
+
 export const isRoundOver = (maxAttempts: number, guesses: readonly GuessRecord[]): boolean =>
     guesses.length >= maxAttempts || correctGuesses(guesses).length === CELL_COUNT;
 

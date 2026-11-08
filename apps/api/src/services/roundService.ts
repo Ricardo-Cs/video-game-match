@@ -7,7 +7,7 @@ import { createRound, findRoundById, recordGuess, type RoundWithGuesses } from "
 import { drawCategories } from "../utils/drawCategories";
 import { coverUrlOf } from "../utils/igdbImages";
 import { CATEGORIES_PER_ROUND, categoriesOfCell, splitIntoRowsAndColumns } from "../utils/roundGrid";
-import { assertCanGuess } from "../utils/roundRules";
+import { assertCanGuess, missedCellsOf } from "../utils/roundRules";
 import { matchesAllCategories } from "../validators";
 import { findGameById } from "./gameLookupService";
 
@@ -34,6 +34,7 @@ const toRoundView = (round: RoundWithGuesses): RoundView => {
                 cell: guess.cell,
                 game: { id: guess.igdbGameId, name: guess.gameName, coverUrl: guess.coverUrl },
             })),
+        missedCells: missedCellsOf(round.guesses),
     };
 };
 

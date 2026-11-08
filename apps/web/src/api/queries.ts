@@ -13,7 +13,7 @@ export const roundKeys = {
   detail: (roundId: string) => [...roundKeys.all, roundId] as const,
 };
 
-const MIN_SEARCH_LENGTH = 3;
+export const MIN_SEARCH_LENGTH = 3;
 
 // A IGDB tem rate limit de ~4 req/s; o cache por termo evita repetir chamadas enquanto o jogador corrige o texto
 export function useGameSearchQuery(search: string) {
