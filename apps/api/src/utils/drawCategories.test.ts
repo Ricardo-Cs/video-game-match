@@ -11,8 +11,17 @@ const CATALOG = getCategoriesData().categories;
 // acompanhe, o teste deixa de cobrir o par novo e isso precisa aparecer.
 const INCOMPATIBLE_PAIRS = [
     ["Jogo da Nintendo", "Jogo da From Software"],
+    ["Jogo Indie", "Jogo da From Software"],
     ["Lançado depois de 1999", "Lançado antes de 1999"],
     ["Lançado em 2020 ou depois", "Lançado antes de 1999"],
+    ["Vencedor de Melhor Jogo do Ano", "Jogo de PlayStation 2"],
+    ["Vencedor de Melhor Jogo do Ano", "Lançado antes de 1999"],
+    ["Vencedor de Melhor Jogo do Ano", "Jogo da Valve"],
+    ["Vencedor de Melhor Jogo Indie", "Jogo de PlayStation 2"],
+    ["Vencedor de Melhor Jogo Indie", "Lançado antes de 1999"],
+    ["Vencedor de Melhor Jogo Indie", "Jogo da From Software"],
+    ["Vencedor de Melhor Jogo Indie", "Jogo da Nintendo"],
+    ["Vencedor de Melhor Jogo Indie", "Jogo da Valve"],
 ];
 
 const SEEDS = Array.from({ length: 200 }, (_, index) => `seed-${index}`);
@@ -38,6 +47,14 @@ describe("drawCategories", () => {
         for (const seed of SEEDS) {
             const selected = namesOf(drawCategories(CATALOG, seed));
             expect(new Set(selected).size).toBe(selected.length);
+        }
+    });
+
+    it("todo par incompatível cita categorias que existem no catálogo", () => {
+        const known = new Set(namesOf(CATALOG));
+
+        for (const name of INCOMPATIBLE_PAIRS.flat()) {
+            expect(known, `"${name}" não existe no catálogo`).toContain(name);
         }
     });
 

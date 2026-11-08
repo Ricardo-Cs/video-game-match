@@ -15,7 +15,7 @@
             "condition": {
                 "field": "company",
                 "operator": "includes",
-                "value": "FromSoftware."
+                "value": "FromSoftware"
             }
         },
         {
@@ -43,15 +43,6 @@
                 "field": "releaseYear",
                 "operator": "<",
                 "value": 1999
-            }
-        },
-        {
-            "name": "Gênero: Ação",
-            "type": "genre",
-            "condition": {
-                "field": "genre",
-                "operator": "includes",
-                "value": "Action"
             }
         },
         {

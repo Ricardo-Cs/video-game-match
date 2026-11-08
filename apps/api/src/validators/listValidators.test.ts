@@ -11,7 +11,7 @@ import { platformValidator } from "./platformValidator";
  * divergência futura entre eles apareça.
  */
 const listValidators = [
-    { name: "genreValidator", validate: genreValidator, present: "Action", absent: "Puzzle" },
+    { name: "genreValidator", validate: genreValidator, present: "Adventure", absent: "Puzzle" },
     { name: "platformValidator", validate: platformValidator, present: "PlayStation 2", absent: "Nintendo 64" },
     { name: "gameModeValidator", validate: gameModeValidator, present: "Single player", absent: "Multiplayer" },
     { name: "companyValidator", validate: companyValidator, present: "Nintendo", absent: "Valve" },
@@ -44,8 +44,8 @@ describe.each(listValidators)("$name", ({ validate, present, absent }) => {
 
 /**
  * Documenta a fragilidade do item 8 da revisão: a condição casa por string
- * literal, então "FromSoftware." (com ponto final, como está em data.json)
- * só bate se a IGDB devolver exatamente esse texto.
+ * literal. O data.json já teve "FromSoftware." (com ponto final), que nunca
+ * batia com o nome da IGDB e tornava a categoria impossível.
  */
 it("companyValidator: o ponto final de 'FromSoftware.' é significativo", () => {
     expect(companyValidator(["FromSoftware"], "FromSoftware.")).toBe(false);

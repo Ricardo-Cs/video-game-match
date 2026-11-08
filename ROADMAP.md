@@ -55,16 +55,19 @@ Maior mudança de arquitetura: fecha a trapaça (hoje o cliente envia as categor
 - [x] Capa do jogo acertado em tamanho maior (`t_cover_big`, já devolvida pela API em `solvedCells`)
 - [x] Contador de tentativas e tela de fim de jogo
 - [x] Layout mobile-first
+- [ ] Aviso de erro diz qual categoria o jogo não atendeu (ex.: Dave the Diver concorreu, mas não venceu Melhor Jogo Indie 2023, e a mensagem atual não deixa claro que o DLC passou). Exige o resultado por categoria no `GuessResult`; deixa o jogo um pouco mais fácil, já que o erro revela parte da resposta
 
 ### Etapa 5 — Categorias melhores
 
 - [ ] Separar "Desenvolvido por" de "Publicado por" (usar os booleans `developer`/`publisher` de `involved_companies`)
-- [ ] Condições por id da IGDB, não por nome (corrige casos como `"FromSoftware."`)
+- [ ] Condições por id da IGDB, não por nome — o `"FromSoftware."` com ponto deixou a categoria impossível até ser corrigido à mão no `data.json`
 - [ ] Prêmios ligados por `igdb_id` em vez do nome do jogo; passar a usar o ano (`game_award.year`)
 - [ ] Novas categorias: temas, perspectiva, franquia, faixa de nota, modos multiplayer, geração de console
+  - "Ação" saiu do catálogo: na IGDB é tema, não gênero (`genres` nunca tem "Action"). Volta como categoria de tema.
+- [ ] "Jogo Multiplayer" aceita qualquer modo com mais de um jogador (Co-operative, Split screen, MMO, Battle Royale): na IGDB "Multiplayer" é um modo separado, e jogos só coop falham (ex.: Elden Ring Nightreign tem só Single player e Co-operative, já a Deluxe Edition tem Multiplayer). Avaliar bloquear o par Coop × Multiplayer, que ficaria trivial
 - [ ] Campos buscados na IGDB derivados das categorias da rodada (hoje a lista em `getGameById` é fixa) — ao mudar os campos, invalidar o `game_cache` (entradas antigas não têm os campos novos)
 - [ ] Incompatibilidades deduzidas da condição (mesmo tipo + faixas excludentes), não listadas à mão
-- [ ] Rodada sempre solucionável: checar com `POST /games/count` da IGDB que cada célula tem resposta antes de servir a grade (serve também como métrica de dificuldade)
+- [ ] Rodada sempre solucionável: checar com `POST /games/count` da IGDB que cada célula tem resposta antes de servir a grade (serve também como métrica de dificuldade). Substitui a lista de pares escrita à mão em `drawCategories.ts`; os prêmios ficam no banco local, então as células de prêmio precisam ser checadas contra os vencedores, não pela IGDB. Exigir um mínimo de respostas por célula, porque há pares com um único jogo possível (ex.: Jogo do Ano × PS3 só aceita Dragon Age: Inquisition)
 
 > Cuidado com os limites da IGDB: campo vazio é omitido (categorias negativas são pouco confiáveis), `multiplayer_modes`/`game_engines` têm completude irregular e o rate limit é de ~4 req/s.
 
