@@ -1,5 +1,5 @@
+import type { AnswerResult, CategoryType, Condition, VerifyAnswerData } from "@vgm/contracts";
 import { AppError } from "../errors/AppError";
-import type { AnswerResult, VerifyAnswerData } from "@vgm/contracts";
 import { GameCheckApiResponse } from "../types/types";
 import { awardValidator } from "./awardValidator";
 import { companyValidator } from "./developersValidator";
@@ -9,40 +9,44 @@ import { genreValidator } from "./genreValidator";
 import { platformValidator } from "./platformValidator";
 import { releaseYearValidator } from "./releaseYearValidator";
 
-export const checkAnswer = async (apiResponse: GameCheckApiResponse, data: VerifyAnswerData): Promise<AnswerResult> => {
-    // Aguarda todas as validações (algumas assíncronas, ex.: award consulta o banco)
-    const results = await Promise.all(data.categories.map(async (category) => {
-        const value = category.condition.value;
+type CategoryValidator = (game: GameCheckApiResponse, condition: Condition) => boolean | Promise<boolean>;
 
-        switch (category.type) {
-            case "genre":
-                return genreValidator(apiResponse.genres?.map((genre) => genre.name), value as string);
-            case "releaseYear": {
-                if (!apiResponse.first_release_date) return false;
-                const releaseYear = new Date(apiResponse.first_release_date * 1000).getFullYear();
-                return releaseYearValidator(category.condition.operator, releaseYear, Number(value));
-            }
-            case "company":
-                return companyValidator(apiResponse.involved_companies?.map((c) => c.company.name), value as string);
-            case "platform":
-                return platformValidator(apiResponse.platforms?.map((platform) => platform.name), value as string);
-            case "award":
-                return awardValidator(apiResponse.name, value as string);
-            case "gameMode":
-                return gameModeValidator(apiResponse.game_modes?.map((mode) => mode.name), value as string);
-            case "dlcs":
-                return dlcsValidator(apiResponse.dlcs);
-            default: {
-                // O z.enum barra tipos desconhecidos na borda; o `never` faz o TS
-                // acusar um tipo novo em CATEGORY_TYPES que ficou sem case aqui
-                const unhandledType: never = category.type;
-                throw new AppError(`Tipo de categoria sem validador: ${unhandledType}`);
-            }
-        }
-    }));
+const namesOf = (items?: { name: string }[] | null) => items?.map((item) => item.name);
 
-    if (results.every((condition) => condition === true))
-        return { answer: true, image: apiResponse.cover?.url ?? null };
+const yearFromEpochSeconds = (epochSeconds: number) => new Date(epochSeconds * 1000).getFullYear();
 
-    return { answer: false, message: "Resposta incorreta!" };
+// Uma categoria nova é uma entrada aqui; o Record faz o TypeScript acusar
+// qualquer tipo de CATEGORY_TYPES que ficar sem validador.
+const categoryValidators: Record<CategoryType, CategoryValidator> = {
+    genre: (game, { value }) => genreValidator(namesOf(game.genres), String(value)),
+    platform: (game, { value }) => platformValidator(namesOf(game.platforms), String(value)),
+    gameMode: (game, { value }) => gameModeValidator(namesOf(game.game_modes), String(value)),
+    company: (game, { value }) =>
+        companyValidator(game.involved_companies?.map(({ company }) => company.name), String(value)),
+    releaseYear: (game, { operator, value }) =>
+        game.first_release_date !== undefined &&
+        releaseYearValidator(operator, yearFromEpochSeconds(game.first_release_date), Number(value)),
+    dlcs: (game) => dlcsValidator(game.dlcs),
+    award: (game, { value }) => awardValidator(game.name, String(value)),
+};
+
+// O z.enum já barra tipos desconhecidos na borda; chegar aqui sem validador é bug
+// nosso e deve falhar alto, não virar "resposta incorreta"
+const findValidator = (type: CategoryType): CategoryValidator => {
+    if (!Object.hasOwn(categoryValidators, type)) {
+        throw new AppError(`Tipo de categoria sem validador: ${type}`);
+    }
+    return categoryValidators[type];
+};
+
+export const checkAnswer = async (game: GameCheckApiResponse, data: VerifyAnswerData): Promise<AnswerResult> => {
+    const results = await Promise.all(
+        data.categories.map(({ type, condition }) => findValidator(type)(game, condition)),
+    );
+
+    const isCorrect = results.every(Boolean);
+
+    return isCorrect
+        ? { answer: true, image: game.cover?.url ?? null }
+        : { answer: false, message: "Resposta incorreta!" };
 };

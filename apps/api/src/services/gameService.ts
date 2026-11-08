@@ -1,14 +1,12 @@
+import { randomUUID } from "node:crypto";
 import { getGameById, searchGames } from "../integrations/igdb";
 import { getCategoriesData } from "../repositories/categoriesRepository";
-import { createCategories } from "../utils/createCategories";
+import { drawCategories } from "../utils/drawCategories";
 import type { GameSearchResult, VerifyAnswerData } from "@vgm/contracts";
 import { checkAnswer } from "../validators";
 import { AppError } from "../errors/AppError";
 
-export const createCategoriesService = () => {
-    const categoriesData = getCategoriesData();
-    return createCategories(categoriesData);
-};
+export const createCategoriesService = () => drawCategories(getCategoriesData().categories, randomUUID());
 
 export const gameSearchService = async (search: string): Promise<GameSearchResult[]> => {
     const games = await searchGames(search);

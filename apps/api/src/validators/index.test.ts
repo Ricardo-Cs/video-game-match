@@ -105,11 +105,14 @@ describe("checkAnswer", () => {
      * O z.enum barra tipo desconhecido na borda. Se mesmo assim um chegar ao
      * checkAnswer, é bug nosso: falha alto em vez de virar "resposta incorreta".
      */
-    it("lança AppError para tipo de categoria sem validador", async () => {
-        await expect(
-            checkAnswer(GAME, answer(category("genero" as CategoryType, "includes", "Role-playing (RPG)"))),
-        ).rejects.toThrow(AppError);
-    });
+    it.each(["genero", "toString", "constructor"])(
+        "lança AppError para o tipo de categoria sem validador %j",
+        async (unknownType) => {
+            await expect(
+                checkAnswer(GAME, answer(category(unknownType as CategoryType, "includes", "Role-playing (RPG)"))),
+            ).rejects.toThrow(AppError);
+        },
+    );
 
     /**
      * Anexo A.2: involved_companies é achatado em nomes e os booleans

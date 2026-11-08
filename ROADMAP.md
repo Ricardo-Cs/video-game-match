@@ -41,8 +41,8 @@ Maior mudança de arquitetura: fecha a trapaça (hoje o cliente envia as categor
 - [ ] Regra: o mesmo jogo não vale em duas células
 - [ ] Regra: limite de tentativas por rodada
 - [ ] Cache da IGDB por `gameId` (reduz latência, cota e dependência de rede)
-- [ ] `createCategories` com sorteio determinístico (embaralhar e pegar os compatíveis), sem `while` infinito — reativar o teste hoje em `it.skip`
-- [ ] Registry `Record<CategoryType, Validator>` no lugar do `switch` do `checkAnswer`
+- [x] `drawCategories` com sorteio determinístico por seed (embaralhar e pegar os compatíveis), sem `while` infinito — teste de catálogo insuficiente reativado
+- [x] Registry `Record<CategoryType, CategoryValidator>` no lugar do `switch` do `checkAnswer`
 - [ ] Atualizar `@vgm/contracts` com os formatos de rodada e palpite
 
 ### Etapa 4 — Grade jogável no web
