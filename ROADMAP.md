@@ -33,9 +33,9 @@ Maior mudança de arquitetura: fecha a trapaça (hoje o cliente envia as categor
 
 - [x] Migrar para Prisma 7.10.1 (`prisma.config.ts`, gerador `prisma-client`, driver adapter `pg`), Postgres e remoção do `overrides` de `deepmerge-ts`
 - [x] Migrations do Prisma versionadas; `dev.db` fora do git; seed idempotente (`pnpm --filter @vgm/api db:seed`) no lugar do `insert.sql`
-- [ ] Tabela `Round`: as 6 categorias sorteadas, data e seed
-- [ ] Tabela `Guess`: rodada, célula, `igdb_game_id`, acerto/erro
-- [ ] Tabela `GameCache`: resposta da IGDB por jogo, com TTL
+- [x] Tabela `Round`: as 6 categorias sorteadas (snapshot em JSONB), seed, limite de tentativas e status
+- [x] Tabela `Guess`: rodada, célula, `igdb_game_id`, acerto/erro — índices únicos parciais garantem no banco um acerto por célula e o mesmo jogo em no máximo uma célula
+- [x] Tabela `GameCache`: resposta da IGDB por jogo, com `expires_at`
 - [ ] `POST /rounds`: sorteia e persiste a rodada (substitui `GET /game/createCategories`)
 - [ ] `POST /rounds/:id/guesses`: recebe só `{ cell, gameId }`; o servidor valida com as categorias que ele mesmo guardou (substitui `POST /game/verifyAnswer`)
 - [ ] Regra: o mesmo jogo não vale em duas células

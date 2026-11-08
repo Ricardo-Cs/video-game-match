@@ -6,7 +6,7 @@ Jogo de grade no estilo *Immaculate Grid*: o servidor sorteia categorias (gêner
 
 ```
 apps/
-  api/        Express 5 + Prisma (SQLite) + integração IGDB
+  api/        Express 5 + Prisma 7 (Postgres) + integração IGDB
   web/        React 19 + Vite + MUI + TanStack Query
 packages/
   contracts/  Schemas Zod e tipos compartilhados entre api e web
@@ -18,17 +18,20 @@ packages/
 
 - Node.js 22.12+
 - pnpm 12 — `npm install -g pnpm@12.10.1` (a versão exata fica em `packageManager` no `package.json`)
+- Docker ou Podman (com `podman-compose`) para o Postgres local
 - Credenciais de um app em [dev.twitch.tv/console/apps](https://dev.twitch.tv/console/apps) (a IGDB autentica pela Twitch)
 
 ## Primeiros passos
 
 ```bash
-pnpm install
+docker compose up -d                      # ou: podman compose up -d
+pnpm install                              # também gera o Prisma Client
 
 cp apps/api/.env.example apps/api/.env   # preencha CLIENT_ID e CLIENT_SECRET
 cp apps/web/.env.example apps/web/.env
 
-pnpm --filter @vgm/api exec prisma generate
+pnpm --filter @vgm/api db:migrate         # aplica as migrations
+pnpm --filter @vgm/api db:seed            # prêmios curados
 pnpm dev                                  # sobe api (3333) e web (5173) juntos
 ```
 

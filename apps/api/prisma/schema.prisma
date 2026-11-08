@@ -37,3 +37,61 @@ model GameAward {
   @@index([awardId])
   @@map("game_awards")
 }
+
+enum RoundStatus {
+  IN_PROGRESS
+  FINISHED
+}
+
+// Uma partida: a grade 3×3 sorteada e servida ao jogador.
+// As categorias são guardadas como snapshot para que a validação dos palpites
+// use exatamente o que foi sorteado, mesmo que o catálogo mude depois.
+model Round {
+  // uuid v7: não adivinhável (vai na URL) e ordenado por tempo (índice compacto)
+  id          String      @id @default(uuid(7)) @db.Uuid
+  // Semente do sorteio: reproduz a grade (puzzle diário, depuração)
+  seed        String
+  // Category[] na ordem [linha0, linha1, linha2, coluna0, coluna1, coluna2]
+  categories  Json
+  // Guardado por rodada para que mudar a regra não afete partidas em andamento
+  maxAttempts Int         @map("max_attempts")
+  status      RoundStatus @default(IN_PROGRESS)
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+  finishedAt  DateTime?   @map("finished_at")
+  guesses     Guess[]
+
+  @@index([createdAt])
+  @@map("rounds")
+}
+
+// Cada tentativa numa célula, certa ou errada (serve também para a raridade das respostas).
+// Índices únicos parciais na migration garantem, mesmo com requisições concorrentes:
+// uma resposta certa por célula e o mesmo jogo certo em no máximo uma célula.
+model Guess {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  roundId    String   @map("round_id") @db.Uuid
+  // 0..8, linha * 3 + coluna
+  cell       Int      @db.SmallInt
+  igdbGameId Int      @map("igdb_game_id")
+  correct    Boolean
+  createdAt  DateTime @default(now()) @map("created_at")
+  round      Round    @relation(fields: [roundId], references: [id], onDelete: Cascade)
+
+  @@index([roundId])
+  // Raridade: "quantos acertaram a célula X com o jogo Y"
+  @@index([igdbGameId])
+  @@map("guesses")
+}
+
+// Resposta da IGDB por jogo, para reduzir latência, cota e dependência de rede
+model GameCache {
+  igdbGameId Int      @id @map("igdb_game_id")
+  data       Json
+  fetchedAt  DateTime @default(now()) @map("fetched_at")
+  expiresAt  DateTime @map("expires_at")
+
+  // Limpeza periódica das entradas vencidas
+  @@index([expiresAt])
+  @@map("game_cache")
+}
