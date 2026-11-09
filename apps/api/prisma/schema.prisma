@@ -22,7 +22,8 @@ model Award {
 model Game {
   id        Int         @id @default(autoincrement())
   igdbId    Int         @unique @map("igdb_id")
-  name      String      @unique
+  // Só para exibição e leitura do banco: a identidade do jogo é o igdbId
+  name      String
   gameAward GameAward[]
 
   @@map("games")
