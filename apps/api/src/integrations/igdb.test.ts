@@ -1,7 +1,17 @@
+import { AxiosError, type AxiosResponse } from "axios";
 import { describe, expect, it, vi } from "vitest";
 
 import { AppError } from "../errors/AppError";
-import { buildCountMultiquery, buildGameCheckMultiquery, buildSearchQuery, sanitizeSearch } from "./igdb";
+import {
+    buildCountMultiquery,
+    buildGameCheckMultiquery,
+    buildSearchQuery,
+    countAt,
+    rateLimitRetryDelay,
+    sanitizeSearch,
+    toIgdbAppError,
+    type MultiqueryResult,
+} from "./igdb";
 
 vi.mock("../config/env", () => ({
     env: {
@@ -45,11 +55,11 @@ describe("buildSearchQuery: tipos de jogo", () => {
 });
 
 describe("buildGameCheckMultiquery", () => {
-    it("traz o jogo e conta, filtro a filtro, se ele casa", () => {
+    it("traz o jogo, só se for de tipo jogável, e conta, filtro a filtro, se ele casa", () => {
         const query = buildGameCheckMultiquery(1942, ["(genres = (12))", "(platforms = (8))"]);
 
         expect(query.split("\n")).toEqual([
-            'query games "game" { fields name, cover.url; where id = 1942; };',
+            'query games "game" { fields name, cover.url; where id = 1942 & game_type = (0,2,8,9,10); };',
             'query games/count "0" { where id = 1942 & (genres = (12)); };',
             'query games/count "1" { where id = 1942 & (platforms = (8)); };',
         ]);
@@ -66,5 +76,57 @@ describe("buildCountMultiquery", () => {
             'query games/count "0" { where (genres = (12)); };',
             'query games/count "1" { where (themes = (1)); };',
         ]);
+    });
+});
+
+describe("countAt", () => {
+    const results = new Map<string, MultiqueryResult>([
+        ["0", { name: "0", count: 3 }],
+        ["1", { name: "1", count: 0 }],
+    ]);
+
+    it("lê a contagem da consulta pela posição", () => {
+        expect(countAt(results, 0)).toBe(3);
+        expect(countAt(results, 1)).toBe(0);
+    });
+
+    it("lança AppError 502 quando a contagem não veio, em vez de assumir zero", () => {
+        expect(() => countAt(results, 2)).toThrow(expect.objectContaining({ name: "AppError", statusCode: 502 }));
+    });
+});
+
+describe("rateLimitRetryDelay", () => {
+    it("espera mais a cada repetição após um 429", () => {
+        expect(rateLimitRetryDelay(0)).toBe(1000);
+        expect(rateLimitRetryDelay(1)).toBe(2000);
+    });
+
+    it("desiste depois de duas repetições", () => {
+        expect(rateLimitRetryDelay(2)).toBeNull();
+    });
+});
+
+describe("toIgdbAppError", () => {
+    const httpError = (status: number) =>
+        new AxiosError("falha", "ERR_BAD_RESPONSE", undefined, undefined, { status } as AxiosResponse);
+
+    it("responde 503 quando a IGDB limita as requisições", () => {
+        expect(toIgdbAppError(httpError(429))).toMatchObject({ statusCode: 503 });
+    });
+
+    it("responde 504 quando a IGDB não responde a tempo", () => {
+        expect(toIgdbAppError(new AxiosError("timeout", "ECONNABORTED"))).toMatchObject({ statusCode: 504 });
+    });
+
+    it("responde 502 para as demais falhas da IGDB", () => {
+        vi.spyOn(console, "error").mockImplementation(() => {});
+
+        expect(toIgdbAppError(httpError(500))).toMatchObject({ statusCode: 502 });
+    });
+
+    it("mantém o AppError que já veio pronto (ex.: falha ao autenticar na Twitch)", () => {
+        const authError = new AppError("Não foi possível autenticar na IGDB.", 502);
+
+        expect(toIgdbAppError(authError)).toBe(authError);
     });
 });
