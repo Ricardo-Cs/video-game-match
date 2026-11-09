@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Category } from "@vgm/contracts";
 import { createRound, findRoundById, recordGuess, type RoundWithGuesses } from "../repositories/roundRepository";
-import { findUnmetCategories } from "../validators";
-import { findGameById } from "./gameLookupService";
+import { drawCategories } from "../utils/drawCategories";
+import { checkGameAgainstCategories, createAnswerCounter, loadFilterContext } from "./categoryCheckService";
 import { getRound, MAX_ATTEMPTS_PER_ROUND, startRound, submitGuess } from "./roundService";
 
 vi.mock("../repositories/roundRepository", () => ({
@@ -11,15 +11,19 @@ vi.mock("../repositories/roundRepository", () => ({
     findRoundById: vi.fn(),
     recordGuess: vi.fn(),
 }));
-vi.mock("../validators", () => ({ findUnmetCategories: vi.fn() }));
-vi.mock("./gameLookupService", () => ({ findGameById: vi.fn() }));
+vi.mock("./categoryCheckService", () => ({
+    checkGameAgainstCategories: vi.fn(),
+    createAnswerCounter: vi.fn(),
+    loadFilterContext: vi.fn(),
+}));
+vi.mock("../utils/drawCategories", () => ({ drawCategories: vi.fn() }));
 
 const ROUND_ID = "0193a5b2-0000-7000-8000-000000000001";
 
 const categoryNamed = (name: string): Category => ({
     name,
     type: "genre",
-    condition: { field: "genre", operator: "includes", value: name },
+    condition: { ids: [1] },
 });
 
 const CATEGORIES = ["linha0", "linha1", "linha2", "coluna0", "coluna1", "coluna2"].map(categoryNamed);
@@ -61,24 +65,38 @@ beforeEach(() => {
 });
 
 describe("startRound", () => {
-    it("guarda a seed e as categorias sorteadas, com o limite de tentativas", async () => {
+    const FILTER_CONTEXT = { awardWinnerIds: new Map() };
+    const countAnswers = vi.fn();
+
+    beforeEach(() => {
+        vi.mocked(loadFilterContext).mockResolvedValue(FILTER_CONTEXT);
+        vi.mocked(createAnswerCounter).mockReturnValue(countAnswers);
+        vi.mocked(drawCategories).mockResolvedValue(CATEGORIES);
         vi.mocked(createRound).mockImplementation(async (round) =>
             storedRound({ seed: round.seed, categories: round.categories }),
         );
+    });
 
+    it("sorteia com a seed da rodada e contando as respostas na IGDB", async () => {
+        await startRound();
+
+        const saved = vi.mocked(createRound).mock.calls[0][0];
+        expect(createAnswerCounter).toHaveBeenCalledWith(FILTER_CONTEXT);
+        expect(drawCategories).toHaveBeenCalledWith(expect.any(Array), saved.seed, countAnswers);
+    });
+
+    it("guarda a seed e as categorias sorteadas, com o limite de tentativas", async () => {
         const view = await startRound();
 
         const saved = vi.mocked(createRound).mock.calls[0][0];
         expect(saved.seed).toEqual(expect.any(String));
-        expect(saved.categories).toHaveLength(6);
+        expect(saved.categories).toEqual(CATEGORIES);
         expect(saved.maxAttempts).toBe(MAX_ATTEMPTS_PER_ROUND);
         expect(view.rows).toHaveLength(3);
         expect(view.columns).toHaveLength(3);
     });
 
     it("não expõe a condição das categorias ao cliente", async () => {
-        vi.mocked(createRound).mockImplementation(async (round) => storedRound({ categories: round.categories }));
-
         const view = await startRound();
 
         for (const category of [...view.rows, ...view.columns]) {
@@ -112,21 +130,21 @@ describe("getRound", () => {
 describe("submitGuess", () => {
     beforeEach(() => {
         vi.mocked(findRoundById).mockResolvedValue(storedRound());
-        vi.mocked(findGameById).mockResolvedValue(GAME);
         vi.mocked(recordGuess).mockResolvedValue(storedRound());
     });
 
     it("valida o jogo só contra a linha e a coluna da célula", async () => {
-        vi.mocked(findUnmetCategories).mockResolvedValue([]);
+        vi.mocked(checkGameAgainstCategories).mockResolvedValue({ game: GAME, unmetCategories: [] });
 
         await submitGuess(ROUND_ID, { cell: 5, gameId: GAME.id });
 
-        const [, categories] = vi.mocked(findUnmetCategories).mock.calls[0];
+        const [gameId, categories] = vi.mocked(checkGameAgainstCategories).mock.calls[0];
+        expect(gameId).toBe(GAME.id);
         expect(categories.map((category) => category.name)).toEqual(["linha1", "coluna2"]);
     });
 
     it("registra o palpite certo com nome e capa do jogo", async () => {
-        vi.mocked(findUnmetCategories).mockResolvedValue([]);
+        vi.mocked(checkGameAgainstCategories).mockResolvedValue({ game: GAME, unmetCategories: [] });
 
         const result = await submitGuess(ROUND_ID, { cell: 0, gameId: GAME.id });
 
@@ -142,7 +160,7 @@ describe("submitGuess", () => {
     });
 
     it("registra o palpite errado, que também gasta tentativa", async () => {
-        vi.mocked(findUnmetCategories).mockResolvedValue([CATEGORIES[3]]);
+        vi.mocked(checkGameAgainstCategories).mockResolvedValue({ game: GAME, unmetCategories: [CATEGORIES[3]] });
 
         const result = await submitGuess(ROUND_ID, { cell: 0, gameId: GAME.id });
 
@@ -151,7 +169,7 @@ describe("submitGuess", () => {
     });
 
     it("diz qual categoria o jogo não atendeu, sem expor a condição", async () => {
-        vi.mocked(findUnmetCategories).mockResolvedValue([CATEGORIES[3]]);
+        vi.mocked(checkGameAgainstCategories).mockResolvedValue({ game: GAME, unmetCategories: [CATEGORIES[3]] });
 
         const result = await submitGuess(ROUND_ID, { cell: 0, gameId: GAME.id });
 
@@ -162,7 +180,7 @@ describe("submitGuess", () => {
         vi.mocked(findRoundById).mockResolvedValue(storedRound({ status: "FINISHED" }));
 
         await expect(submitGuess(ROUND_ID, { cell: 0, gameId: GAME.id })).rejects.toMatchObject({ statusCode: 409 });
-        expect(findGameById).not.toHaveBeenCalled();
+        expect(checkGameAgainstCategories).not.toHaveBeenCalled();
         expect(recordGuess).not.toHaveBeenCalled();
     });
 
@@ -172,10 +190,15 @@ describe("submitGuess", () => {
         await expect(submitGuess(ROUND_ID, { cell: 0, gameId: GAME.id })).rejects.toMatchObject({ statusCode: 404 });
     });
 
-    it("falha alto se as categorias guardadas estiverem corrompidas", async () => {
-        vi.mocked(findRoundById).mockResolvedValue(storedRound({ categories: CATEGORIES.slice(0, 2) }));
+    it("recusa com 410 rodada guardada em formato antigo, sem registrar o palpite", async () => {
+        const legacyCategories = CATEGORIES.map(({ name, type }) => ({
+            name,
+            type,
+            condition: { field: type, operator: "includes", value: name },
+        }));
+        vi.mocked(findRoundById).mockResolvedValue(storedRound({ categories: legacyCategories }));
 
-        await expect(submitGuess(ROUND_ID, { cell: 0, gameId: GAME.id })).rejects.toThrow();
+        await expect(submitGuess(ROUND_ID, { cell: 0, gameId: GAME.id })).rejects.toMatchObject({ statusCode: 410 });
         expect(recordGuess).not.toHaveBeenCalled();
     });
 });

@@ -6,7 +6,7 @@ import { categoriesOfCell, splitIntoRowsAndColumns } from "./roundGrid";
 const categoryNamed = (name: string): Category => ({
     name,
     type: "genre",
-    condition: { field: "genre", operator: "includes", value: name },
+    condition: { ids: [1] },
 });
 
 const CATEGORIES = ["linha0", "linha1", "linha2", "coluna0", "coluna1", "coluna2"].map(categoryNamed);

@@ -1,156 +1,468 @@
 {
     "categories": [
         {
-            "name": "Jogo da Nintendo",
+            "name": "Desenvolvido pela Nintendo",
             "type": "company",
             "condition": {
-                "field": "company",
-                "operator": "includes",
-                "value": "Nintendo"
+                "companyId": 70,
+                "role": "developer"
             }
         },
         {
-            "name": "Jogo da From Software",
+            "name": "Desenvolvido pela FromSoftware",
             "type": "company",
             "condition": {
-                "field": "company",
-                "operator": "includes",
-                "value": "FromSoftware"
+                "companyId": 1012,
+                "role": "developer"
             }
         },
         {
-            "name": "Jogo da Valve",
+            "name": "Desenvolvido pela Valve",
             "type": "company",
             "condition": {
-                "field": "company",
-                "operator": "includes",
-                "value": "Valve"
+                "companyId": 56,
+                "role": "developer"
             }
         },
         {
-            "name": "Lançado depois de 1999",
+            "name": "Desenvolvido pela Capcom",
+            "type": "company",
+            "condition": {
+                "companyId": 37,
+                "role": "developer"
+            }
+        },
+        {
+            "name": "Publicado pela Nintendo",
+            "type": "company",
+            "condition": {
+                "companyId": 70,
+                "role": "publisher"
+            }
+        },
+        {
+            "name": "Publicado pela Sony",
+            "type": "company",
+            "condition": {
+                "companyId": 10100,
+                "role": "publisher"
+            }
+        },
+        {
+            "name": "Publicado pela Square Enix",
+            "type": "company",
+            "condition": {
+                "companyId": 26,
+                "role": "publisher"
+            }
+        },
+        {
+            "name": "Publicado pela Electronic Arts",
+            "type": "company",
+            "condition": {
+                "companyId": 1,
+                "role": "publisher"
+            }
+        },
+        {
+            "name": "Lançado antes de 2000",
             "type": "releaseYear",
             "condition": {
-                "field": "releaseYear",
-                "operator": ">",
-                "value": 1999
-            }
-        },
-        {
-            "name": "Lançado antes de 1999",
-            "type": "releaseYear",
-            "condition": {
-                "field": "releaseYear",
                 "operator": "<",
-                "value": 1999
+                "value": 2000
             }
         },
         {
-            "name": "Gênero: RPG",
-            "type": "genre",
+            "name": "Lançado depois de 2010",
+            "type": "releaseYear",
             "condition": {
-                "field": "genre",
-                "operator": "includes",
-                "value": "Role-playing (RPG)"
-            }
-        },
-        {
-            "name": "Gênero: Puzzle",
-            "type": "genre",
-            "condition": {
-                "field": "genre",
-                "operator": "includes",
-                "value": "Puzzle"
-            }
-        },
-        {
-            "name": "Jogo de PlayStation 2",
-            "type": "platform",
-            "condition": {
-                "field": "platform",
-                "operator": "includes",
-                "value": "PlayStation 2"
-            }
-        },
-        {
-            "name": "Jogo de PlayStation 3",
-            "type": "platform",
-            "condition": {
-                "field": "platform",
-                "operator": "includes",
-                "value": "PlayStation 3"
-            }
-        },
-        {
-            "name": "Vencedor de Melhor Jogo do Ano",
-            "type": "award",
-            "condition": {
-                "field": "award",
-                "operator": "includes",
-                "value": "Game Of The Year"
+                "operator": ">",
+                "value": 2010
             }
         },
         {
             "name": "Lançado em 2020 ou depois",
             "type": "releaseYear",
             "condition": {
-                "field": "releaseYear",
                 "operator": ">=",
                 "value": 2020
+            }
+        },
+        {
+            "name": "Gênero: RPG",
+            "type": "genre",
+            "condition": {
+                "ids": [
+                    12
+                ]
+            }
+        },
+        {
+            "name": "Gênero: Puzzle",
+            "type": "genre",
+            "condition": {
+                "ids": [
+                    9
+                ]
+            }
+        },
+        {
+            "name": "Gênero: Plataforma",
+            "type": "genre",
+            "condition": {
+                "ids": [
+                    8
+                ]
+            }
+        },
+        {
+            "name": "Gênero: Tiro",
+            "type": "genre",
+            "condition": {
+                "ids": [
+                    5
+                ]
+            }
+        },
+        {
+            "name": "Gênero: Luta",
+            "type": "genre",
+            "condition": {
+                "ids": [
+                    4
+                ]
+            }
+        },
+        {
+            "name": "Gênero: Corrida",
+            "type": "genre",
+            "condition": {
+                "ids": [
+                    10
+                ]
+            }
+        },
+        {
+            "name": "Gênero: Estratégia",
+            "type": "genre",
+            "condition": {
+                "ids": [
+                    15,
+                    11,
+                    16
+                ]
+            }
+        },
+        {
+            "name": "Gênero: Aventura",
+            "type": "genre",
+            "condition": {
+                "ids": [
+                    31
+                ]
             }
         },
         {
             "name": "Jogo Indie",
             "type": "genre",
             "condition": {
-                "field": "genre",
-                "operator": "includes",
-                "value": "Indie"
+                "ids": [
+                    32
+                ]
             }
         },
         {
-            "name": "Com DLCS",
-            "type": "dlcs",
+            "name": "Tema: Ação",
+            "type": "theme",
             "condition": {
-                "field": "dlcs",
-                "operator": "includes",
-                "value": "dlcs"
+                "ids": [
+                    1
+                ]
             }
         },
         {
-            "name": "Vencedor de Melhor Jogo Indie",
-            "type": "award",
+            "name": "Tema: Terror",
+            "type": "theme",
             "condition": {
-                "field": "award",
-                "operator": "includes",
-                "value": "Best Indie Game"
+                "ids": [
+                    19
+                ]
+            }
+        },
+        {
+            "name": "Tema: Mundo aberto",
+            "type": "theme",
+            "condition": {
+                "ids": [
+                    38
+                ]
+            }
+        },
+        {
+            "name": "Tema: Ficção científica",
+            "type": "theme",
+            "condition": {
+                "ids": [
+                    18
+                ]
+            }
+        },
+        {
+            "name": "Tema: Fantasia",
+            "type": "theme",
+            "condition": {
+                "ids": [
+                    17
+                ]
+            }
+        },
+        {
+            "name": "Jogo de PlayStation",
+            "type": "platform",
+            "condition": {
+                "ids": [
+                    7
+                ]
+            }
+        },
+        {
+            "name": "Jogo de PlayStation 2",
+            "type": "platform",
+            "condition": {
+                "ids": [
+                    8
+                ]
+            }
+        },
+        {
+            "name": "Jogo de PlayStation 3",
+            "type": "platform",
+            "condition": {
+                "ids": [
+                    9
+                ]
+            }
+        },
+        {
+            "name": "Jogo de Xbox 360",
+            "type": "platform",
+            "condition": {
+                "ids": [
+                    12
+                ]
+            }
+        },
+        {
+            "name": "Jogo de Nintendo 64",
+            "type": "platform",
+            "condition": {
+                "ids": [
+                    4
+                ]
+            }
+        },
+        {
+            "name": "Jogo de Wii",
+            "type": "platform",
+            "condition": {
+                "ids": [
+                    5
+                ]
+            }
+        },
+        {
+            "name": "Jogo de Nintendo Switch",
+            "type": "platform",
+            "condition": {
+                "ids": [
+                    130
+                ]
+            }
+        },
+        {
+            "name": "Saiu em console da 5ª geração",
+            "type": "consoleGeneration",
+            "condition": {
+                "generation": 5
+            }
+        },
+        {
+            "name": "Saiu em console da 6ª geração",
+            "type": "consoleGeneration",
+            "condition": {
+                "generation": 6
+            }
+        },
+        {
+            "name": "Saiu em console da 8ª geração",
+            "type": "consoleGeneration",
+            "condition": {
+                "generation": 8
             }
         },
         {
             "name": "Jogo Single-Player",
             "type": "gameMode",
             "condition": {
-                "field": "gameMode",
-                "operator": "includes",
-                "value": "Single player"
+                "ids": [
+                    1
+                ]
             }
         },
         {
             "name": "Jogo Multiplayer",
             "type": "gameMode",
             "condition": {
-                "field": "gameMode",
-                "operator": "includes",
-                "value": "Multiplayer"
+                "ids": [
+                    2,
+                    3,
+                    4,
+                    5,
+                    6
+                ]
             }
         },
         {
             "name": "Jogo Coop",
             "type": "gameMode",
             "condition": {
-                "field": "gameMode",
-                "operator": "includes",
-                "value": "Co-operative"
+                "ids": [
+                    3
+                ]
+            }
+        },
+        {
+            "name": "Tela dividida",
+            "type": "gameMode",
+            "condition": {
+                "ids": [
+                    4
+                ]
+            }
+        },
+        {
+            "name": "Primeira pessoa",
+            "type": "perspective",
+            "condition": {
+                "ids": [
+                    1
+                ]
+            }
+        },
+        {
+            "name": "Terceira pessoa",
+            "type": "perspective",
+            "condition": {
+                "ids": [
+                    2
+                ]
+            }
+        },
+        {
+            "name": "Visão lateral",
+            "type": "perspective",
+            "condition": {
+                "ids": [
+                    4
+                ]
+            }
+        },
+        {
+            "name": "Visão isométrica",
+            "type": "perspective",
+            "condition": {
+                "ids": [
+                    3
+                ]
+            }
+        },
+        {
+            "name": "Franquia: The Legend of Zelda",
+            "type": "franchise",
+            "condition": {
+                "ids": [
+                    596
+                ]
+            }
+        },
+        {
+            "name": "Franquia: Mario",
+            "type": "franchise",
+            "condition": {
+                "ids": [
+                    845
+                ]
+            }
+        },
+        {
+            "name": "Franquia: Final Fantasy",
+            "type": "franchise",
+            "condition": {
+                "ids": [
+                    4
+                ]
+            }
+        },
+        {
+            "name": "Franquia: Resident Evil",
+            "type": "franchise",
+            "condition": {
+                "ids": [
+                    29
+                ]
+            }
+        },
+        {
+            "name": "Franquia: Pokémon",
+            "type": "franchise",
+            "condition": {
+                "ids": [
+                    60
+                ]
+            }
+        },
+        {
+            "name": "Franquia: Sonic",
+            "type": "franchise",
+            "condition": {
+                "ids": [
+                    457
+                ]
+            }
+        },
+        {
+            "name": "Nota 85 ou mais",
+            "type": "rating",
+            "condition": {
+                "operator": ">=",
+                "value": 85
+            }
+        },
+        {
+            "name": "Nota abaixo de 70",
+            "type": "rating",
+            "condition": {
+                "operator": "<",
+                "value": 70
+            }
+        },
+        {
+            "name": "Com DLCs ou expansões",
+            "type": "dlcs",
+            "condition": {}
+        },
+        {
+            "name": "Vencedor de Melhor Jogo do Ano",
+            "type": "award",
+            "condition": {
+                "award": "Game Of The Year"
+            }
+        },
+        {
+            "name": "Vencedor de Melhor Jogo Indie",
+            "type": "award",
+            "condition": {
+                "award": "Best Indie Game"
             }
         }
     ]

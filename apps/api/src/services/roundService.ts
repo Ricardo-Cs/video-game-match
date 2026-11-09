@@ -8,14 +8,18 @@ import { drawCategories } from "../utils/drawCategories";
 import { coverUrlOf } from "../utils/igdbImages";
 import { CATEGORIES_PER_ROUND, categoriesOfCell, splitIntoRowsAndColumns } from "../utils/roundGrid";
 import { assertCanGuess, missedCellsOf } from "../utils/roundRules";
-import { findUnmetCategories } from "../validators";
-import { findGameById } from "./gameLookupService";
+import { checkGameAgainstCategories, createAnswerCounter, loadFilterContext } from "./categoryCheckService";
 
 export const MAX_ATTEMPTS_PER_ROUND = 9;
 
 const storedCategoriesSchema = z.array(categorySchema).length(CATEGORIES_PER_ROUND);
 
-const categoriesOf = (round: RoundWithGuesses): Category[] => storedCategoriesSchema.parse(round.categories);
+// Rodadas criadas antes das categorias por id guardaram outro formato e não dá para validá-las
+const categoriesOf = (round: RoundWithGuesses): Category[] => {
+    const parsed = storedCategoriesSchema.safeParse(round.categories);
+    if (!parsed.success) throw new AppError("Essa rodada é de uma versão antiga do jogo. Comece outra.", 410);
+    return parsed.data;
+};
 
 const toCategoryView = ({ name, type }: Category): CategoryView => ({ name, type });
 
@@ -47,7 +51,8 @@ const findRoundOrFail = async (roundId: string): Promise<RoundWithGuesses> => {
 
 export const startRound = async (): Promise<RoundView> => {
     const seed = randomUUID();
-    const categories = drawCategories(getCategoriesData().categories, seed);
+    const countAnswers = createAnswerCounter(await loadFilterContext());
+    const categories = await drawCategories(getCategoriesData().categories, seed, countAnswers);
     const round = await createRound({ seed, categories, maxAttempts: MAX_ATTEMPTS_PER_ROUND });
 
     return toRoundView(round);
@@ -61,8 +66,10 @@ export const submitGuess = async (roundId: string, { cell, gameId }: CreateGuess
     // Recusa cedo, antes de gastar uma chamada à IGDB
     assertCanGuess(round, cell, gameId);
 
-    const game = await findGameById(gameId);
-    const unmetCategories = await findUnmetCategories(game, categoriesOfCell(categoriesOf(round), cell));
+    const { game, unmetCategories } = await checkGameAgainstCategories(
+        gameId,
+        categoriesOfCell(categoriesOf(round), cell),
+    );
     const correct = unmetCategories.length === 0;
 
     const updatedRound = await recordGuess(roundId, {

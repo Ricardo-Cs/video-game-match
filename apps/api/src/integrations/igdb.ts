@@ -1,7 +1,7 @@
 import axios from "axios";
 import { env } from "../config/env";
 import { AppError } from "../errors/AppError";
-import { GameCheckApiResponse, GameSearchResponse } from "../types/types";
+import { GameSearchResponse, GameSummary } from "../types/types";
 import { getAccessToken, invalidateAccessToken } from "./twitchAuth";
 
 declare module "axios" {
@@ -52,22 +52,50 @@ igdb.interceptors.response.use(undefined, async (error) => {
 // do usuário fechariam a string e injetariam cláusulas na query
 export const sanitizeSearch = (search: string) => search.replace(/["\\]/g, "").trim();
 
-export const buildSearchQuery = (search: string) => {
-    const gameTypeFilter = Object.values(GAME_TYPES)
-        .map((type) => `game_type = ${type}`)
-        .join(" | ");
+// O mesmo recorte vale para a busca e para contar as respostas de uma célula:
+// o que conta como resposta é o que o jogador consegue encontrar
+export const PLAYABLE_GAME_TYPES_FILTER = `game_type = (${Object.values(GAME_TYPES).join(",")})`;
 
-    return `search "${sanitizeSearch(search)}"; fields id, name, first_release_date, game_type; where ${gameTypeFilter};`;
-};
+// A IGDB aceita no máximo 10 consultas por multiquery
+const MULTIQUERY_LIMIT = 10;
 
-export const buildGameByIdQuery = (id: number) => {
-    // O id é interpolado cru na query, então só passa inteiro positivo
+export const buildSearchQuery = (search: string) =>
+    `search "${sanitizeSearch(search)}"; fields id, name, first_release_date, game_type; where ${PLAYABLE_GAME_TYPES_FILTER};`;
+
+// O id é interpolado cru na query, então só passa inteiro positivo
+export const assertValidGameId = (id: number): void => {
     if (!Number.isSafeInteger(id) || id <= 0) {
         throw new AppError("Id de jogo inválido.", 400);
     }
-
-    return `fields name, genres.name, first_release_date, platforms.name, dlcs, involved_companies.company.name, player_perspectives.name, game_modes.name, cover.url; where id = ${id};`;
 };
+
+const GAME_RESULT_NAME = "game";
+
+export const buildGameCheckMultiquery = (gameId: number, filters: readonly string[]): string => {
+    assertValidGameId(gameId);
+
+    const gameQuery = `query games "${GAME_RESULT_NAME}" { fields name, cover.url; where id = ${gameId}; };`;
+    const filterQueries = filters.map(
+        (filter, index) => `query games/count "${index}" { where id = ${gameId} & ${filter}; };`,
+    );
+
+    return [gameQuery, ...filterQueries].join("\n");
+};
+
+export const buildCountMultiquery = (filters: readonly string[]): string =>
+    filters.map((filter, index) => `query games/count "${index}" { where ${filter}; };`).join("\n");
+
+type MultiqueryResult = { name: string; count?: number; result?: unknown[] };
+
+const runMultiquery = async (body: string): Promise<Map<string, MultiqueryResult>> => {
+    const { data } = await igdb.post<MultiqueryResult[]>("/multiquery", body);
+    return new Map(data.map((entry) => [entry.name, entry]));
+};
+
+const countAt = (results: Map<string, MultiqueryResult>, index: number): number => results.get(String(index))?.count ?? 0;
+
+const chunk = <T>(items: readonly T[], size: number): T[][] =>
+    Array.from({ length: Math.ceil(items.length / size) }, (_, index) => items.slice(index * size, (index + 1) * size));
 
 export const searchGames = async (search: string): Promise<GameSearchResponse[]> => {
     if (!sanitizeSearch(search)) return [];
@@ -76,7 +104,28 @@ export const searchGames = async (search: string): Promise<GameSearchResponse[]>
     return data;
 };
 
-export const getGameById = async (id: number): Promise<GameCheckApiResponse | undefined> => {
-    const { data } = await igdb.post<GameCheckApiResponse[]>("/games", buildGameByIdQuery(id));
-    return data[0];
+// Em série, e não em paralelo, por causa do rate limit da IGDB (~4 req/s)
+export const countGamesMatching = async (filters: readonly string[]): Promise<number[]> => {
+    const counts: number[] = [];
+
+    for (const batch of chunk(filters, MULTIQUERY_LIMIT)) {
+        const results = await runMultiquery(buildCountMultiquery(batch));
+        counts.push(...batch.map((_filter, index) => countAt(results, index)));
+    }
+
+    return counts;
+};
+
+export interface GameCheck {
+    game: GameSummary | undefined;
+    matchesPerFilter: boolean[];
+}
+
+// Uma requisição só traz o jogo e diz, filtro a filtro, se ele casa.
+// Cabe em uma multiquery enquanto a célula tiver até 9 categorias (são 2).
+export const checkGameAgainstFilters = async (gameId: number, filters: readonly string[]): Promise<GameCheck> => {
+    const results = await runMultiquery(buildGameCheckMultiquery(gameId, filters));
+    const [game] = (results.get(GAME_RESULT_NAME)?.result ?? []) as GameSummary[];
+
+    return { game, matchesPerFilter: filters.map((_filter, index) => countAt(results, index) > 0) };
 };

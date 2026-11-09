@@ -1,45 +1,66 @@
-import type { Category } from "@vgm/contracts";
+import { GRID_SIZE, type Category } from "@vgm/contracts";
 import { AppError } from "../errors/AppError";
-import { CATEGORIES_PER_ROUND } from "./roundGrid";
+import { isPlayableCell } from "./cellPlayability";
 import { createSeededRandom, shuffle } from "./seededRandom";
 
-// Pares sem nenhum jogo que satisfaça os dois ao mesmo tempo. Paliativo até a
-// checagem automática com /games/count da IGDB (Etapa 5 do ROADMAP).
-const INCOMPATIBLE_CATEGORY_PAIRS: readonly (readonly [string, string])[] = [
-    ["Jogo da Nintendo", "Jogo da From Software"],
-    ["Jogo Indie", "Jogo da From Software"],
-    ["Lançado depois de 1999", "Lançado antes de 1999"],
-    ["Lançado em 2020 ou depois", "Lançado antes de 1999"],
-    // Os prêmios do seed vão de 2014 a 2024, nenhum vencedor saiu no PS2 ou antes de 1999
-    ["Vencedor de Melhor Jogo do Ano", "Jogo de PlayStation 2"],
-    ["Vencedor de Melhor Jogo do Ano", "Lançado antes de 1999"],
-    ["Vencedor de Melhor Jogo do Ano", "Jogo da Valve"],
-    ["Vencedor de Melhor Jogo Indie", "Jogo de PlayStation 2"],
-    ["Vencedor de Melhor Jogo Indie", "Lançado antes de 1999"],
-    ["Vencedor de Melhor Jogo Indie", "Jogo da From Software"],
-    ["Vencedor de Melhor Jogo Indie", "Jogo da Nintendo"],
-    ["Vencedor de Melhor Jogo Indie", "Jogo da Valve"],
-];
+// Conta, para cada grupo, quantos jogos atendem a todas as categorias do grupo ao mesmo tempo
+export type CountAnswers = (groups: readonly (readonly Category[])[]) => Promise<number[]>;
 
-const areIncompatible = (first: Category, second: Category): boolean =>
-    INCOMPATIBLE_CATEGORY_PAIRS.some(([one, other]) =>
-        (one === first.name && other === second.name) || (one === second.name && other === first.name),
+// Linhas nunca se cruzam entre si (nem colunas): basta a categoria nova formar
+// células jogáveis com cada categoria do eixo oposto
+const formsPlayableCells = async (
+    candidate: Category,
+    opposite: readonly Category[],
+    countAnswers: CountAnswers,
+): Promise<boolean> => {
+    if (opposite.length === 0) return true;
+
+    const [candidateCount, ...counts] = await countAnswers([
+        [candidate],
+        ...opposite.map((category) => [category]),
+        ...opposite.map((category) => [candidate, category]),
+    ]);
+    const oppositeCounts = counts.slice(0, opposite.length);
+    const cellCounts = counts.slice(opposite.length);
+
+    return opposite.every((_category, index) =>
+        isPlayableCell({ cell: cellCounts[index], row: candidateCount, column: oppositeCounts[index] }),
     );
+};
 
-const fitsAlongside = (selected: readonly Category[], candidate: Category): boolean =>
-    selected.every((chosen) => chosen.name !== candidate.name && !areIncompatible(chosen, candidate));
+// Tenta primeiro o eixo mais vazio, para que linhas e colunas cresçam juntas e
+// cada candidata seja conferida cedo, em vez de três linhas sem nenhuma checagem
+const axesInTryOrder = (rows: Category[], columns: Category[]) =>
+    rows.length <= columns.length
+        ? [{ axis: rows, opposite: columns }, { axis: columns, opposite: rows }]
+        : [{ axis: columns, opposite: rows }, { axis: rows, opposite: columns }];
 
-export const drawCategories = (catalog: readonly Category[], seed: string): Category[] => {
-    const selected: Category[] = [];
+const isGridComplete = (rows: Category[], columns: Category[]) =>
+    rows.length === GRID_SIZE && columns.length === GRID_SIZE;
+
+// Mesma seed e mesmas contagens, mesma grade: o puzzle diário e a depuração dependem disso
+export const drawCategories = async (
+    catalog: readonly Category[],
+    seed: string,
+    countAnswers: CountAnswers,
+): Promise<Category[]> => {
+    const rows: Category[] = [];
+    const columns: Category[] = [];
 
     for (const candidate of shuffle(catalog, createSeededRandom(seed))) {
-        if (selected.length === CATEGORIES_PER_ROUND) break;
-        if (fitsAlongside(selected, candidate)) selected.push(candidate);
+        if (isGridComplete(rows, columns)) break;
+
+        for (const { axis, opposite } of axesInTryOrder(rows, columns)) {
+            if (axis.length < GRID_SIZE && (await formsPlayableCells(candidate, opposite, countAnswers))) {
+                axis.push(candidate);
+                break;
+            }
+        }
     }
 
-    if (selected.length < CATEGORIES_PER_ROUND) {
-        throw new AppError(`O catálogo não tem ${CATEGORIES_PER_ROUND} categorias compatíveis entre si.`);
+    if (!isGridComplete(rows, columns)) {
+        throw new AppError("Não foi possível montar uma grade com resposta em todas as células.");
     }
 
-    return selected;
+    return [...rows, ...columns];
 };

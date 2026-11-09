@@ -5,25 +5,52 @@ import { z } from "zod";
 
 // --- Categorias ---
 
-export const CATEGORY_TYPES = ["genre", "releaseYear", "company", "platform", "gameMode", "dlcs", "award"] as const;
-export const CONDITION_OPERATORS = ["includes", "<", "<=", ">", ">="] as const;
+// Cada tipo de categoria tem a condição no seu formato, sempre por id da IGDB
+// (nomes mudam e têm grafias variadas; ids não).
 
-export const conditionSchema = z.object({
-    field: z.string(),
-    operator: z.enum(CONDITION_OPERATORS),
-    value: z.union([z.string(), z.number()]),
+export const COMPARISON_OPERATORS = ["<", "<=", ">", ">="] as const;
+export const COMPANY_ROLES = ["developer", "publisher"] as const;
+
+const igdbIdSchema = z.number().int().positive();
+
+// O jogo atende se tiver qualquer um dos ids
+const anyOfIdsSchema = z.object({ ids: z.array(igdbIdSchema).min(1) });
+
+const comparisonSchema = z.object({
+    operator: z.enum(COMPARISON_OPERATORS),
+    value: z.number(),
 });
 
-export const categorySchema = z.object({
-    name: z.string(),
-    type: z.enum(CATEGORY_TYPES),
-    condition: conditionSchema,
-});
+const categoryOf = <Type extends string, Condition extends z.ZodType>(type: Type, condition: Condition) =>
+    z.object({ name: z.string().min(1), type: z.literal(type), condition });
 
-export type CategoryType = typeof CATEGORY_TYPES[number];
-export type ConditionOperator = typeof CONDITION_OPERATORS[number];
-export type Condition = z.infer<typeof conditionSchema>;
+export const categorySchema = z.discriminatedUnion("type", [
+    categoryOf("genre", anyOfIdsSchema),
+    categoryOf("theme", anyOfIdsSchema),
+    categoryOf("platform", anyOfIdsSchema),
+    categoryOf("gameMode", anyOfIdsSchema),
+    categoryOf("perspective", anyOfIdsSchema),
+    categoryOf("franchise", anyOfIdsSchema),
+    categoryOf("company", z.object({ companyId: igdbIdSchema, role: z.enum(COMPANY_ROLES) })),
+    categoryOf("consoleGeneration", z.object({ generation: z.number().int().positive() })),
+    categoryOf("releaseYear", comparisonSchema),
+    // total_rating da IGDB, de 0 a 100
+    categoryOf("rating", comparisonSchema),
+    categoryOf("dlcs", z.object({})),
+    // Nome do prêmio na tabela awards; os vencedores ficam no banco, ligados por igdb_id
+    categoryOf("award", z.object({ award: z.string().min(1) })),
+]);
+
 export type Category = z.infer<typeof categorySchema>;
+export type CategoryType = Category["type"];
+export type CategoryOfType<Type extends CategoryType> = Extract<Category, { type: Type }>;
+export type ComparisonOperator = typeof COMPARISON_OPERATORS[number];
+export type CompanyRole = typeof COMPANY_ROLES[number];
+
+export const CATEGORY_TYPES = categorySchema.options.map((option) => option.shape.type.value) as [
+    CategoryType,
+    ...CategoryType[],
+];
 
 // --- Busca de jogos ---
 
@@ -60,7 +87,7 @@ export const createGuessSchema = z.object({
 });
 
 // O cliente só precisa saber o que exibir; a condição de cada categoria fica no servidor
-export const categoryViewSchema = categorySchema.pick({ name: true, type: true });
+export const categoryViewSchema = z.object({ name: z.string(), type: z.enum(CATEGORY_TYPES) });
 
 export const solvedCellSchema = z.object({
     cell: cellIndexSchema,

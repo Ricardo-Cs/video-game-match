@@ -12,39 +12,13 @@ export interface GameSearchResponse {
     game_type: number
 };
 
-export interface GameCheckApiResponse {
+// O jogo só como a grade exibe: o resto é conferido direto na IGDB pelos filtros
+export interface GameSummary {
     id: number,
     name: string,
-    // A IGDB omite campos vazios, então tudo além de id/name pode faltar
-    first_release_date?: number,
-    genres?: {
-        id: number,
-        name: string
-    }[],
-    platforms?: {
-        id: number,
-        name: string
-    }[],
+    // A IGDB omite campos vazios
     cover?: {
         id: number,
         url: string
     },
-    dlcs?: {
-        id: number
-    }[] | null,
-    involved_companies?: {
-        id: number,
-        company: {
-            id: number,
-            name: string
-        }
-    }[] | null,
-    player_perspectives?: {
-        id: number,
-        name: string
-    }[],
-    game_modes?: {
-        id: number,
-        name: string
-    }[]
 }

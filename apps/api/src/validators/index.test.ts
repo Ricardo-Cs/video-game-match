@@ -1,122 +1,91 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { AppError } from "../errors/AppError";
-import type { Category, CategoryType, ConditionOperator } from "@vgm/contracts";
-import { GameCheckApiResponse } from "../types/types";
-import { awardValidator } from "./awardValidator";
-import { findUnmetCategories } from "./index";
+import type { Category, CategoryType } from "@vgm/contracts";
+import { buildCategoryFilter, buildFilterForAll, type CategoryFilterContext } from "./index";
 
-// O awardValidator é o único que vai ao banco; aqui só interessa se o
-// findUnmetCategories roteia para ele e aguarda o resultado.
-vi.mock("./awardValidator", () => ({ awardValidator: vi.fn() }));
-
-const mockedAwardValidator = vi.mocked(awardValidator);
-
-const GAME: GameCheckApiResponse = {
-    id: 1942,
-    name: "The Witcher 3: Wild Hunt",
-    first_release_date: 1431993600, // 2015-05-19
-    genres: [{ id: 12, name: "Role-playing (RPG)" }],
-    platforms: [{ id: 6, name: "PC (Microsoft Windows)" }],
-    game_modes: [{ id: 1, name: "Single player" }],
-    involved_companies: [{ id: 1, company: { id: 908, name: "CD Projekt RED" } }],
-    dlcs: [{ id: 1 }],
-    cover: { id: 5, url: "//images.igdb.com/capa.jpg" },
+const CONTEXT: CategoryFilterContext = {
+    awardWinnerIds: new Map([["Game Of The Year", [1942, 119133]]]),
 };
 
-const category = (type: CategoryType, operator: ConditionOperator, value: string | number): Category => ({
-    name: `categoria ${type}`,
-    type,
-    condition: { field: type, operator, value },
+const named = <T extends Category>(category: Omit<T, "name">): T => ({ name: "categoria", ...category }) as T;
+
+const filterOf = (category: Omit<Category, "name">) => buildCategoryFilter(named(category), CONTEXT);
+
+describe("buildCategoryFilter", () => {
+    it.each([
+        { type: "genre", field: "genres" },
+        { type: "theme", field: "themes" },
+        { type: "platform", field: "platforms" },
+        { type: "gameMode", field: "game_modes" },
+        { type: "perspective", field: "player_perspectives" },
+    ] as const)("$type casa qualquer um dos ids em $field", ({ type, field }) => {
+        expect(filterOf({ type, condition: { ids: [2, 3] } })).toBe(`(${field} = (2,3))`);
+    });
+
+    it("franquia aceita tanto a franquia principal quanto a lista de franquias", () => {
+        expect(filterOf({ type: "franchise", condition: { ids: [596] } })).toBe(
+            "((franchises = (596) | franchise = (596)))",
+        );
+    });
+
+    it("empresa exige o papel (desenvolvedora ou publicadora)", () => {
+        expect(filterOf({ type: "company", condition: { companyId: 70, role: "developer" } })).toBe(
+            "(involved_companies.company = 70 & involved_companies.developer = true)",
+        );
+        expect(filterOf({ type: "company", condition: { companyId: 70, role: "publisher" } })).toBe(
+            "(involved_companies.company = 70 & involved_companies.publisher = true)",
+        );
+    });
+
+    it.each([
+        { operator: "<", expected: "first_release_date < 946684800" },
+        { operator: "<=", expected: "first_release_date < 978307200" },
+        { operator: ">", expected: "first_release_date >= 978307200" },
+        { operator: ">=", expected: "first_release_date >= 946684800" },
+    ] as const)("ano $operator 2000 vira limite em 1º de janeiro (UTC)", ({ operator, expected }) => {
+        expect(filterOf({ type: "releaseYear", condition: { operator, value: 2000 } })).toBe(`(${expected})`);
+    });
+
+    it("nota compara o total_rating", () => {
+        expect(filterOf({ type: "rating", condition: { operator: ">=", value: 85 } })).toBe("(total_rating >= 85)");
+    });
+
+    it("geração de console olha a geração das plataformas", () => {
+        expect(filterOf({ type: "consoleGeneration", condition: { generation: 6 } })).toBe(
+            "(platforms.generation = 6)",
+        );
+    });
+
+    it("DLC aceita DLCs ou expansões", () => {
+        expect(filterOf({ type: "dlcs", condition: {} })).toBe("((dlcs != null | expansions != null))");
+    });
+
+    it("prêmio aceita os vencedores e as edições deles", () => {
+        expect(filterOf({ type: "award", condition: { award: "Game Of The Year" } })).toBe(
+            "((id = (1942,119133) | version_parent = (1942,119133)))",
+        );
+    });
+
+    it("lança AppError para prêmio sem vencedores cadastrados", () => {
+        expect(() => filterOf({ type: "award", condition: { award: "Prêmio Inexistente" } })).toThrow(
+            expect.objectContaining({ name: "AppError" }),
+        );
+    });
+
+    it.each(["genero", "toString", "constructor"])("lança AppError para o tipo sem filtro %j", (unknownType) => {
+        expect(() => filterOf({ type: unknownType as CategoryType, condition: { ids: [1] } } as never)).toThrow(
+            expect.objectContaining({ name: "AppError" }),
+        );
+    });
 });
 
-const matchesAllCategories = async (game: GameCheckApiResponse, categories: Category[]) =>
-    (await findUnmetCategories(game, categories)).length === 0;
+describe("buildFilterForAll", () => {
+    it("exige todas as categorias ao mesmo tempo", () => {
+        const categories = [
+            named<Category>({ type: "genre", condition: { ids: [12] } }),
+            named<Category>({ type: "platform", condition: { ids: [8] } }),
+        ];
 
-beforeEach(() => {
-    vi.resetAllMocks();
-});
-
-describe("findUnmetCategories", () => {
-    it("devolve só as categorias que o jogo não atende, na ordem recebida", async () => {
-        const rpg = category("genre", "includes", "Role-playing (RPG)");
-        const puzzle = category("genre", "includes", "Puzzle");
-        const before2010 = category("releaseYear", "<", 2010);
-
-        await expect(findUnmetCategories(GAME, [puzzle, rpg, before2010])).resolves.toEqual([puzzle, before2010]);
-    });
-
-
-    it("aceita quando todas as categorias batem", async () => {
-        const result = await matchesAllCategories(GAME, [
-            category("genre", "includes", "Role-playing (RPG)"),
-            category("platform", "includes", "PC (Microsoft Windows)"),
-            category("releaseYear", "<", 2020),
-            category("dlcs", "includes", "dlcs"),
-        ]);
-
-        expect(result).toBe(true);
-    });
-
-    it("recusa se uma única categoria falha", async () => {
-        const result = await matchesAllCategories(GAME, [
-            category("genre", "includes", "Role-playing (RPG)"),
-            category("genre", "includes", "Puzzle"),
-        ]);
-
-        expect(result).toBe(false);
-    });
-
-    it("converte first_release_date (epoch em segundos) para ano", async () => {
-        await expect(
-            matchesAllCategories(GAME, [category("releaseYear", ">=", 2015)]),
-        ).resolves.toBe(true);
-
-        await expect(
-            matchesAllCategories(GAME, [category("releaseYear", ">", 2015)]),
-        ).resolves.toBe(false);
-    });
-
-    it("recusa releaseYear quando a IGDB omitiu a data", async () => {
-        const { first_release_date: _date, ...semData } = GAME;
-
-        await expect(
-            matchesAllCategories(semData, [category("releaseYear", "<", 2020)]),
-        ).resolves.toBe(false);
-    });
-
-    it("aguarda o awardValidator, que é assíncrono", async () => {
-        mockedAwardValidator.mockResolvedValue(true);
-
-        const result = await matchesAllCategories(GAME, [category("award", "includes", "Game Of The Year")]);
-
-        expect(mockedAwardValidator).toHaveBeenCalledWith(GAME.name, "Game Of The Year");
-        expect(result).toBe(true);
-    });
-
-    // O z.enum barra tipo desconhecido na borda; se um chegar aqui, é bug nosso e deve falhar alto
-    it.each(["genero", "toString", "constructor"])(
-        "lança AppError para o tipo de categoria sem validador %j",
-        async (unknownType) => {
-            await expect(
-                findUnmetCategories(GAME, [category(unknownType as CategoryType, "includes", "Role-playing (RPG)")]),
-            ).rejects.toThrow(AppError);
-        },
-    );
-
-    /**
-     * Anexo A.2: involved_companies é achatado em nomes e os booleans
-     * developer/publisher são descartados, então "Jogo da Nintendo" aceita um
-     * jogo apenas publicado pela Nintendo.
-     */
-    it("não distingue desenvolvedora de publicadora", async () => {
-        const publicadoPelaNintendo: GameCheckApiResponse = {
-            ...GAME,
-            involved_companies: [{ id: 2, company: { id: 70, name: "Nintendo" } }],
-        };
-
-        await expect(
-            matchesAllCategories(publicadoPelaNintendo, [category("company", "includes", "Nintendo")]),
-        ).resolves.toBe(true);
+        expect(buildFilterForAll(categories, CONTEXT)).toBe("(genres = (12)) & (platforms = (8))");
     });
 });

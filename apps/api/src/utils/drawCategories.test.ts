@@ -1,97 +1,104 @@
 import { describe, expect, it } from "vitest";
 
 import type { Category } from "@vgm/contracts";
-import { getCategoriesData } from "../repositories/categoriesRepository";
-import { drawCategories } from "./drawCategories";
-import { CATEGORIES_PER_ROUND } from "./roundGrid";
+import { drawCategories, type CountAnswers } from "./drawCategories";
+import { CATEGORIES_PER_ROUND, splitIntoRowsAndColumns } from "./roundGrid";
 
-const CATALOG = getCategoriesData().categories;
+const genre = (name: string, id: number): Category => ({ name, type: "genre", condition: { ids: [id] } });
 
-// Duplicado de propósito: se a lista de drawCategories.ts mudar sem que esta
-// acompanhe, o teste deixa de cobrir o par novo e isso precisa aparecer.
-const INCOMPATIBLE_PAIRS = [
-    ["Jogo da Nintendo", "Jogo da From Software"],
-    ["Jogo Indie", "Jogo da From Software"],
-    ["Lançado depois de 1999", "Lançado antes de 1999"],
-    ["Lançado em 2020 ou depois", "Lançado antes de 1999"],
-    ["Vencedor de Melhor Jogo do Ano", "Jogo de PlayStation 2"],
-    ["Vencedor de Melhor Jogo do Ano", "Lançado antes de 1999"],
-    ["Vencedor de Melhor Jogo do Ano", "Jogo da Valve"],
-    ["Vencedor de Melhor Jogo Indie", "Jogo de PlayStation 2"],
-    ["Vencedor de Melhor Jogo Indie", "Lançado antes de 1999"],
-    ["Vencedor de Melhor Jogo Indie", "Jogo da From Software"],
-    ["Vencedor de Melhor Jogo Indie", "Jogo da Nintendo"],
-    ["Vencedor de Melhor Jogo Indie", "Jogo da Valve"],
-];
+const CATALOG = Array.from({ length: 12 }, (_, index) => genre(`categoria${index}`, index + 1));
 
-const SEEDS = Array.from({ length: 200 }, (_, index) => `seed-${index}`);
+const SEEDS = Array.from({ length: 100 }, (_, index) => `seed-${index}`);
+
+const pairKey = (first: string, second: string) => [first, second].sort().join("|");
+
+const SINGLE_CATEGORY_ANSWERS = 1000;
+const DEFAULT_CELL_ANSWERS = 50;
+
+// Mundo falso: cada categoria tem 1000 jogos, cada par 50, salvo os pares listados
+const fakeCounter = (cellAnswers: Record<string, number> = {}): CountAnswers => async (groups) =>
+    groups.map((group) => {
+        if (group.length === 1) return SINGLE_CATEGORY_ANSWERS;
+        return cellAnswers[pairKey(group[0].name, group[1].name)] ?? DEFAULT_CELL_ANSWERS;
+    });
+
+const cellsOf = (categories: Category[]) => {
+    const { rows, columns } = splitIntoRowsAndColumns(categories);
+    return rows.flatMap((row) => columns.map((column) => pairKey(row.name, column.name)));
+};
 
 const namesOf = (categories: Category[]) => categories.map((category) => category.name);
 
 describe("drawCategories", () => {
-    it(`sorteia exatamente ${CATEGORIES_PER_ROUND} categorias`, () => {
-        expect(drawCategories(CATALOG, "qualquer")).toHaveLength(CATEGORIES_PER_ROUND);
+    it(`sorteia ${CATEGORIES_PER_ROUND} categorias distintas`, async () => {
+        const drawn = await drawCategories(CATALOG, "qualquer", fakeCounter());
+
+        expect(drawn).toHaveLength(CATEGORIES_PER_ROUND);
+        expect(new Set(namesOf(drawn)).size).toBe(CATEGORIES_PER_ROUND);
     });
 
-    it("sorteia a mesma grade para a mesma seed", () => {
-        expect(drawCategories(CATALOG, "grade-do-dia")).toEqual(drawCategories(CATALOG, "grade-do-dia"));
+    it("sorteia a mesma grade para a mesma seed", async () => {
+        const first = await drawCategories(CATALOG, "grade-do-dia", fakeCounter());
+        const second = await drawCategories(CATALOG, "grade-do-dia", fakeCounter());
+
+        expect(first).toEqual(second);
     });
 
-    it("sorteia grades diferentes para seeds diferentes", () => {
-        const grids = SEEDS.map((seed) => namesOf(drawCategories(CATALOG, seed)).join("|"));
+    it("sorteia grades diferentes para seeds diferentes", async () => {
+        const grids = await Promise.all(
+            SEEDS.map(async (seed) => namesOf(await drawCategories(CATALOG, seed, fakeCounter())).join("|")),
+        );
 
         expect(new Set(grids).size).toBeGreaterThan(1);
     });
 
-    it("nunca repete categoria na mesma rodada", () => {
+    it("nunca cruza categorias cuja célula teria poucas respostas", async () => {
+        const unsolvable = {
+            [pairKey("categoria0", "categoria1")]: 0,
+            [pairKey("categoria2", "categoria3")]: 2,
+            [pairKey("categoria4", "categoria5")]: 1,
+        };
+
         for (const seed of SEEDS) {
-            const selected = namesOf(drawCategories(CATALOG, seed));
-            expect(new Set(selected).size).toBe(selected.length);
-        }
-    });
+            const cells = cellsOf(await drawCategories(CATALOG, seed, fakeCounter(unsolvable)));
 
-    it("todo par incompatível cita categorias que existem no catálogo", () => {
-        const known = new Set(namesOf(CATALOG));
-
-        for (const name of INCOMPATIBLE_PAIRS.flat()) {
-            expect(known, `"${name}" não existe no catálogo`).toContain(name);
-        }
-    });
-
-    it("nunca sorteia um par incompatível", () => {
-        for (const seed of SEEDS) {
-            const selected = namesOf(drawCategories(CATALOG, seed));
-
-            for (const [first, second] of INCOMPATIBLE_PAIRS) {
-                expect(
-                    selected.includes(first) && selected.includes(second),
-                    `seed ${seed} sorteou o par incompatível ${first} + ${second}`,
-                ).toBe(false);
+            for (const pair of Object.keys(unsolvable)) {
+                expect(cells, `seed ${seed} cruzou ${pair}`).not.toContain(pair);
             }
         }
     });
 
-    it("só devolve categorias que existem no catálogo", () => {
-        const known = new Set(namesOf(CATALOG));
+    it("nunca cruza categorias em que uma implica a outra", async () => {
+        const implied = { [pairKey("categoria6", "categoria7")]: SINGLE_CATEGORY_ANSWERS };
 
-        for (const name of namesOf(drawCategories(CATALOG, "qualquer"))) {
-            expect(known).toContain(name);
+        for (const seed of SEEDS) {
+            const cells = cellsOf(await drawCategories(CATALOG, seed, fakeCounter(implied)));
+
+            expect(cells, `seed ${seed} cruzou categoria6 com categoria7`).not.toContain(
+                pairKey("categoria6", "categoria7"),
+            );
         }
     });
 
-    it("lança AppError quando o catálogo não tem categorias suficientes", () => {
-        expect(() => drawCategories(CATALOG.slice(0, 3), "qualquer")).toThrow(
-            expect.objectContaining({ name: "AppError" }),
-        );
+    it("permite as duas categorias de um par sem resposta no mesmo eixo, onde não se cruzam", async () => {
+        const fourCategories = CATALOG.slice(0, 6);
+        const onlyPairWithoutAnswers = { [pairKey("categoria0", "categoria1")]: 0 };
+
+        const drawn = await drawCategories(fourCategories, "qualquer", fakeCounter(onlyPairWithoutAnswers));
+
+        expect(namesOf(drawn).sort()).toEqual(namesOf(fourCategories).sort());
+        expect(cellsOf(drawn)).not.toContain(pairKey("categoria0", "categoria1"));
     });
 
-    it("lança AppError quando as categorias restantes são incompatíveis entre si", () => {
-        const nintendo = CATALOG.find((category) => category.name === "Jogo da Nintendo")!;
-        const fromSoftware = CATALOG.find((category) => category.name === "Jogo da From Software")!;
-        const others = CATALOG.filter((category) => category !== nintendo && category !== fromSoftware).slice(0, 4);
+    it("lança AppError quando o catálogo não tem categorias suficientes", async () => {
+        await expect(drawCategories(CATALOG.slice(0, 3), "qualquer", fakeCounter())).rejects.toMatchObject({
+            name: "AppError",
+        });
+    });
 
-        expect(() => drawCategories([...others, nintendo, fromSoftware], "qualquer")).toThrow(
-            expect.objectContaining({ name: "AppError" }),
-        );
+    it("lança AppError quando nenhuma combinação forma células jogáveis", async () => {
+        const noAnswers: CountAnswers = async (groups) => groups.map((group) => (group.length === 1 ? 1000 : 0));
+
+        await expect(drawCategories(CATALOG, "qualquer", noAnswers)).rejects.toMatchObject({ name: "AppError" });
     });
 });
