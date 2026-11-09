@@ -18,3 +18,8 @@ allowBuilds:
   prisma: true
   "@prisma/client": true
   "@prisma/engines": true
+
+overrides:
+  body-parser@>=2.0.0 <2.4.0: ^2.4.0
+  follow-redirects@>=1.16.0 <=1.16.1: ^1.16.2
+  minimatch@>=7.0.0 <11.0.1: ^11.0.1
