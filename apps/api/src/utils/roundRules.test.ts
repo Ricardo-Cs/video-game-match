@@ -80,4 +80,11 @@ describe("assertCanGuess", () => {
             "Esse jogo já foi usado em outra célula.",
         );
     });
+
+    it("recusa repetir na mesma célula um jogo que já errou ali, sem gastar tentativa", () => {
+        expectConflict(
+            () => assertCanGuess(roundWith([wrong(0, 1)]), 0, 1),
+            "Esse jogo já foi tentado nessa célula.",
+        );
+    });
 });

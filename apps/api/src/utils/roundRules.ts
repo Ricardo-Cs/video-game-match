@@ -15,6 +15,10 @@ export interface RoundState {
 
 const correctGuesses = (guesses: readonly GuessRecord[]) => guesses.filter((guess) => guess.correct);
 
+// A validação é determinística: o mesmo jogo na mesma célula erraria de novo
+const isRepeatedWrongGuess = (guesses: readonly GuessRecord[], cell: CellIndex, igdbGameId: number): boolean =>
+    guesses.some((guess) => !guess.correct && guess.cell === cell && guess.igdbGameId === igdbGameId);
+
 // Uma célula errada deixa de contar como erro quando o jogador acaba acertando ela
 export const missedCellsOf = (guesses: readonly GuessRecord[]): CellIndex[] => {
     const solvedCells = new Set(correctGuesses(guesses).map((guess) => guess.cell));
@@ -42,5 +46,9 @@ export const assertCanGuess = (round: RoundState, cell: CellIndex, igdbGameId: n
 
     if (solved.some((guess) => guess.igdbGameId === igdbGameId)) {
         throw new AppError("Esse jogo já foi usado em outra célula.", 409);
+    }
+
+    if (isRepeatedWrongGuess(round.guesses, cell, igdbGameId)) {
+        throw new AppError("Esse jogo já foi tentado nessa célula.", 409);
     }
 };
