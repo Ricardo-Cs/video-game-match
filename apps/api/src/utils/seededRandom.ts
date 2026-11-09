@@ -1,5 +1,5 @@
-// A mesma seed sempre produz a mesma sequência, o que permite reproduzir uma grade
-// (puzzle diário, depuração). Não é criptograficamente seguro: serve só para sorteio.
+// A mesma seed sempre produz a mesma sequência, o que torna o sorteio testável e depurável.
+// Não é criptograficamente seguro: serve só para sorteio.
 
 export type RandomNumberGenerator = () => number;
 

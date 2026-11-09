@@ -38,7 +38,9 @@ const axesInTryOrder = (rows: Category[], columns: Category[]) =>
 const isGridComplete = (rows: Category[], columns: Category[]) =>
     rows.length === GRID_SIZE && columns.length === GRID_SIZE;
 
-// Mesma seed e mesmas contagens, mesma grade: o puzzle diário e a depuração dependem disso
+// Determinístico só dentro do mesmo catálogo e das mesmas contagens: a IGDB muda e o
+// catálogo cresce, então a seed sozinha não refaz uma grade antiga. Quem precisa da
+// grade de novo (puzzle diário, depuração) lê as categorias guardadas na rodada.
 export const drawCategories = async (
     catalog: readonly Category[],
     seed: string,

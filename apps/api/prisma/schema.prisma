@@ -53,7 +53,7 @@ enum RoundStatus {
 model Round {
   // uuid v7: não adivinhável (vai na URL) e ordenado por tempo (índice compacto)
   id          String      @id @default(uuid(7)) @db.Uuid
-  // Semente do sorteio: reproduz a grade (puzzle diário, depuração)
+  // Semente do sorteio. Não refaz a grade sozinha (as contagens da IGDB mudam): a fonte é `categories`
   seed        String
   // Category[] na ordem [linha0, linha1, linha2, coluna0, coluna1, coluna2]
   categories  Json
