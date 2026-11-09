@@ -72,6 +72,9 @@ export type GameSearchResult = z.infer<typeof gameSearchResultSchema>;
 
 export const GRID_SIZE = 3;
 export const CELL_COUNT = GRID_SIZE * GRID_SIZE;
+// Uma tentativa por célula: errar uma vez já impede completar a grade.
+// Cada rodada guarda o próprio limite, então mudar este valor não afeta partidas em andamento.
+export const MAX_ATTEMPTS_PER_ROUND = 9;
 export const ROUND_STATUSES = ["IN_PROGRESS", "FINISHED"] as const;
 
 // Células numeradas por linha: 0 1 2 / 3 4 5 / 6 7 8

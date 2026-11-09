@@ -1,3 +1,5 @@
+import { MAX_ATTEMPTS_PER_ROUND } from '@vgm/contracts';
+
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 
@@ -10,7 +12,7 @@ export function Singleplayer() {
   return (
     <PagePanel
       title="Singleplayer"
-      subtitle="Encontre um jogo que atenda à linha e à coluna de cada célula. São 9 tentativas para completar a grade."
+      subtitle={`Encontre um jogo que atenda à linha e à coluna de cada célula. São ${MAX_ATTEMPTS_PER_ROUND} tentativas para completar a grade.`}
     >
       {startError ? <Alert severity="error">{startError.message}</Alert> : null}
       <Button variant="contained" size="large" onClick={startNewRound} loading={isStarting}>

@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { categorySchema, type Category, type CategoryView, type CreateGuessData, type GuessResult, type RoundView } from "@vgm/contracts";
+import { categorySchema, MAX_ATTEMPTS_PER_ROUND, type Category, type CategoryView, type CreateGuessData, type GuessResult, type RoundView } from "@vgm/contracts";
 import { AppError } from "../errors/AppError";
 import { getCategoriesData } from "../repositories/categoriesRepository";
 import { createRound, findRoundById, recordGuess, type RoundWithGuesses } from "../repositories/roundRepository";
@@ -9,8 +9,6 @@ import { coverUrlOf } from "../utils/igdbImages";
 import { CATEGORIES_PER_ROUND, categoriesOfCell, splitIntoRowsAndColumns } from "../utils/roundGrid";
 import { assertCanGuess, missedCellsOf } from "../utils/roundRules";
 import { checkGameAgainstCategories, createAnswerCounter, loadFilterContext } from "./categoryCheckService";
-
-export const MAX_ATTEMPTS_PER_ROUND = 9;
 
 const storedCategoriesSchema = z.array(categorySchema).length(CATEGORIES_PER_ROUND);
 

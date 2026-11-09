@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { Category } from "@vgm/contracts";
+import { MAX_ATTEMPTS_PER_ROUND, type Category } from "@vgm/contracts";
 import { createRound, findRoundById, recordGuess, type RoundWithGuesses } from "../repositories/roundRepository";
 import { drawCategories } from "../utils/drawCategories";
 import { checkGameAgainstCategories, createAnswerCounter, loadFilterContext } from "./categoryCheckService";
-import { getRound, MAX_ATTEMPTS_PER_ROUND, startRound, submitGuess } from "./roundService";
+import { getRound, startRound, submitGuess } from "./roundService";
 
 vi.mock("../repositories/roundRepository", () => ({
     createRound: vi.fn(),
