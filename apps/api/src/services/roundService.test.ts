@@ -4,7 +4,7 @@ import { MAX_ATTEMPTS_PER_ROUND, type Category } from "@vgm/contracts";
 import { createRound, findRoundById, recordGuess, type RoundWithGuesses } from "../repositories/roundRepository";
 import { drawCategories } from "../utils/drawCategories";
 import { checkGameAgainstCategories, createAnswerCounter, loadFilterContext } from "./categoryCheckService";
-import { getRound, startRound, submitGuess } from "./roundService";
+import { getRound, listUndrawableCategories, startRound, submitGuess } from "./roundService";
 
 vi.mock("../repositories/roundRepository", () => ({
     createRound: vi.fn(),
@@ -85,6 +85,26 @@ describe("startRound", () => {
         expect(drawCategories).toHaveBeenCalledWith(expect.any(Array), saved.seed, countAnswers);
     });
 
+    it("deixa fora do sorteio os prêmios sem vencedores cadastrados", async () => {
+        await startRound();
+
+        const [catalog] = vi.mocked(drawCategories).mock.calls[0];
+        expect(catalog.length).toBeGreaterThan(0);
+        expect(catalog.some((category) => category.type === "award")).toBe(false);
+    });
+
+    it("sorteia os prêmios que têm vencedores cadastrados", async () => {
+        vi.mocked(loadFilterContext).mockResolvedValue({
+            awardWinnerIds: new Map([["Game Of The Year", [1942]]]),
+        });
+
+        await startRound();
+
+        const [catalog] = vi.mocked(drawCategories).mock.calls[0];
+        const awards = catalog.filter((category) => category.type === "award");
+        expect(awards.map((category) => category.condition)).toEqual([{ award: "Game Of The Year" }]);
+    });
+
     it("guarda a seed e as categorias sorteadas, com o limite de tentativas", async () => {
         const view = await startRound();
 
@@ -102,6 +122,18 @@ describe("startRound", () => {
         for (const category of [...view.rows, ...view.columns]) {
             expect(Object.keys(category).sort()).toEqual(["name", "type"]);
         }
+    });
+});
+
+describe("listUndrawableCategories", () => {
+    it("lista as categorias do catálogo que ficam fora do sorteio", async () => {
+        vi.mocked(loadFilterContext).mockResolvedValue({
+            awardWinnerIds: new Map([["Game Of The Year", [1942]]]),
+        });
+
+        const categories = await listUndrawableCategories();
+
+        expect(categories.map((category) => category.condition)).toEqual([{ award: "Best Indie Game" }]);
     });
 });
 

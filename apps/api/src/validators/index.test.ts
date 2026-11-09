@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { Category, CategoryType } from "@vgm/contracts";
-import { buildCategoryFilter, buildFilterForAll, type CategoryFilterContext } from "./index";
+import { buildCategoryFilter, canBuildCategoryFilter, type CategoryFilterContext } from "./index";
 
 const CONTEXT: CategoryFilterContext = {
     awardWinnerIds: new Map([["Game Of The Year", [1942, 119133]]]),
@@ -79,13 +79,22 @@ describe("buildCategoryFilter", () => {
     });
 });
 
-describe("buildFilterForAll", () => {
-    it("exige todas as categorias ao mesmo tempo", () => {
-        const categories = [
-            named<Category>({ type: "genre", condition: { ids: [12] } }),
-            named<Category>({ type: "platform", condition: { ids: [8] } }),
-        ];
+describe("canBuildCategoryFilter", () => {
+    it("aceita prêmio com vencedores cadastrados", () => {
+        const goty = named<Category>({ type: "award", condition: { award: "Game Of The Year" } });
 
-        expect(buildFilterForAll(categories, CONTEXT)).toBe("(genres = (12)) & (platforms = (8))");
+        expect(canBuildCategoryFilter(goty, CONTEXT)).toBe(true);
+    });
+
+    it("recusa prêmio sem vencedores cadastrados", () => {
+        const bestIndie = named<Category>({ type: "award", condition: { award: "Best Indie Game" } });
+
+        expect(canBuildCategoryFilter(bestIndie, CONTEXT)).toBe(false);
+    });
+
+    it("aceita categorias que não dependem do banco", () => {
+        const rpg = named<Category>({ type: "genre", condition: { ids: [12] } });
+
+        expect(canBuildCategoryFilter(rpg, { awardWinnerIds: new Map() })).toBe(true);
     });
 });

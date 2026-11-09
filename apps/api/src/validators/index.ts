@@ -1,7 +1,7 @@
 import type { Category, CategoryOfType, CategoryType } from "@vgm/contracts";
 import { AppError } from "../errors/AppError";
 import { anyOfIdsFilter } from "./anyOfIdsFilter";
-import { awardFilter, type AwardWinnerIds } from "./awardFilter";
+import { awardFilter, hasAwardWinners, type AwardWinnerIds } from "./awardFilter";
 import { companyFilter } from "./companyFilter";
 import { consoleGenerationFilter } from "./consoleGenerationFilter";
 import { dlcsFilter } from "./dlcsFilter";
@@ -48,5 +48,6 @@ export const buildCategoryFilter = (category: Category, context: CategoryFilterC
     return `(${build(category.condition as never, context)})`;
 };
 
-export const buildFilterForAll = (categories: readonly Category[], context: CategoryFilterContext): string =>
-    categories.map((category) => buildCategoryFilter(category, context)).join(" & ");
+// Prêmio sem vencedores no banco (ex.: seed não rodado) não tem filtro possível
+export const canBuildCategoryFilter = (category: Category, context: CategoryFilterContext): boolean =>
+    category.type !== "award" || hasAwardWinners(category.condition.award, context.awardWinnerIds);

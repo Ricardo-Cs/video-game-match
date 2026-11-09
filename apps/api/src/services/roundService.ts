@@ -8,6 +8,7 @@ import { drawCategories } from "../utils/drawCategories";
 import { coverUrlOf } from "../utils/igdbImages";
 import { CATEGORIES_PER_ROUND, categoriesOfCell, splitIntoRowsAndColumns } from "../utils/roundGrid";
 import { assertCanGuess, missedCellsOf } from "../utils/roundRules";
+import { canBuildCategoryFilter, type CategoryFilterContext } from "../validators";
 import { checkGameAgainstCategories, createAnswerCounter, loadFilterContext } from "./categoryCheckService";
 
 const storedCategoriesSchema = z.array(categorySchema).length(CATEGORIES_PER_ROUND);
@@ -47,10 +48,19 @@ const findRoundOrFail = async (roundId: string): Promise<RoundWithGuesses> => {
     return round;
 };
 
+const drawableCategoriesOf = (context: CategoryFilterContext): Category[] =>
+    getCategoriesData().categories.filter((category) => canBuildCategoryFilter(category, context));
+
+// Categorias do catálogo que ficam fora do sorteio por falta de dados no banco (ex.: seed não rodado)
+export const listUndrawableCategories = async (): Promise<Category[]> => {
+    const context = await loadFilterContext();
+    return getCategoriesData().categories.filter((category) => !canBuildCategoryFilter(category, context));
+};
+
 export const startRound = async (): Promise<RoundView> => {
     const seed = randomUUID();
-    const countAnswers = createAnswerCounter(await loadFilterContext());
-    const categories = await drawCategories(getCategoriesData().categories, seed, countAnswers);
+    const context = await loadFilterContext();
+    const categories = await drawCategories(drawableCategoriesOf(context), seed, createAnswerCounter(context));
     const round = await createRound({ seed, categories, maxAttempts: MAX_ATTEMPTS_PER_ROUND });
 
     return toRoundView(round);

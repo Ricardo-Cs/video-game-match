@@ -4,22 +4,42 @@ import { checkGameAgainstFilters, countGamesMatching, PLAYABLE_GAME_TYPES_FILTER
 import { findAwardWinnerIds } from "../repositories/awardRepository";
 import type { GameSummary } from "../types/types";
 import type { CountAnswers } from "../utils/drawCategories";
-import { buildCategoryFilter, buildFilterForAll, type CategoryFilterContext } from "../validators";
+import { buildCategoryFilter, type CategoryFilterContext } from "../validators";
 
 // O catálogo da IGDB muda devagar; um dia de cache evita repetir as mesmas
 // contagens a cada rodada sorteada
 const ANSWER_COUNT_TTL_MS = 24 * 60 * 60 * 1000;
 
-const answerCountCache = new Map<string, { count: number; expiresAt: number }>();
+// A contagem em andamento fica no cache como promessa: rodadas sorteadas ao mesmo
+// tempo esperam a mesma consulta em vez de repeti-la na IGDB
+const answerCountCache = new Map<string, { count: Promise<number>; expiresAt: number }>();
 
 export const clearAnswerCountCache = (): void => answerCountCache.clear();
 
-// A ordem das categorias não muda a contagem: linha × coluna = coluna × linha
-const cacheKeyOf = (group: readonly Category[]): string =>
+// O filtro montado determina a contagem, inclusive os vencedores de um prêmio: um vencedor
+// novo no banco gera outra chave. Ordenado porque linha × coluna = coluna × linha.
+const groupFilterOf = (group: readonly Category[], context: CategoryFilterContext): string =>
     group
-        .map(({ type, condition }) => JSON.stringify({ type, condition }))
+        .map((category) => buildCategoryFilter(category, context))
         .sort()
-        .join("&");
+        .join(" & ");
+
+const isCachedAt = (groupFilter: string, now: number): boolean =>
+    (answerCountCache.get(groupFilter)?.expiresAt ?? 0) > now;
+
+const cacheFreshCounts = (groupFilters: readonly string[], now: number): void => {
+    const batch = countGamesMatching(groupFilters.map((filter) => `${filter} & ${PLAYABLE_GAME_TYPES_FILTER}`));
+
+    groupFilters.forEach((groupFilter, index) => {
+        const entry = { count: batch.then((counts) => counts[index]), expiresAt: now + ANSWER_COUNT_TTL_MS };
+        answerCountCache.set(groupFilter, entry);
+
+        // Falha não fica em cache: a próxima rodada tenta de novo
+        entry.count.catch(() => {
+            if (answerCountCache.get(groupFilter) === entry) answerCountCache.delete(groupFilter);
+        });
+    });
+};
 
 export const loadFilterContext = async (): Promise<CategoryFilterContext> => ({
     awardWinnerIds: await findAwardWinnerIds(),
@@ -27,19 +47,12 @@ export const loadFilterContext = async (): Promise<CategoryFilterContext> => ({
 
 export const createAnswerCounter = (context: CategoryFilterContext): CountAnswers => async (groups) => {
     const now = Date.now();
-    const keys = groups.map(cacheKeyOf);
-    const missingIndexes = keys.flatMap((key, index) =>
-        (answerCountCache.get(key)?.expiresAt ?? 0) > now ? [] : [index],
-    );
+    const groupFilters = groups.map((group) => groupFilterOf(group, context));
+    const missingFilters = [...new Set(groupFilters)].filter((groupFilter) => !isCachedAt(groupFilter, now));
 
-    const freshCounts = await countGamesMatching(
-        missingIndexes.map((index) => `${buildFilterForAll(groups[index], context)} & ${PLAYABLE_GAME_TYPES_FILTER}`),
-    );
-    missingIndexes.forEach((groupIndex, position) => {
-        answerCountCache.set(keys[groupIndex], { count: freshCounts[position], expiresAt: now + ANSWER_COUNT_TTL_MS });
-    });
+    if (missingFilters.length > 0) cacheFreshCounts(missingFilters, now);
 
-    return keys.map((key) => answerCountCache.get(key)!.count);
+    return Promise.all(groupFilters.map((groupFilter) => answerCountCache.get(groupFilter)!.count));
 };
 
 export interface GameCheckResult {

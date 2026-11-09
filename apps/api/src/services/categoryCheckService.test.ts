@@ -62,12 +62,52 @@ describe("createAnswerCounter", () => {
     });
 
     it("não consulta a IGDB quando tudo já está em cache", async () => {
-        vi.mocked(countGamesMatching).mockResolvedValueOnce([7]).mockResolvedValueOnce([]);
+        vi.mocked(countGamesMatching).mockResolvedValueOnce([7]);
         const countAnswers = createAnswerCounter(CONTEXT);
 
         await countAnswers([[RPG]]);
         await expect(countAnswers([[RPG]])).resolves.toEqual([7]);
-        expect(countGamesMatching).toHaveBeenLastCalledWith([]);
+        expect(countGamesMatching).toHaveBeenCalledTimes(1);
+    });
+
+    it("conta uma vez só o grupo repetido na mesma chamada", async () => {
+        vi.mocked(countGamesMatching).mockResolvedValueOnce([7]);
+
+        const counts = await createAnswerCounter(CONTEXT)([[RPG], [RPG]]);
+
+        expect(counts).toEqual([7, 7]);
+        expect(countGamesMatching).toHaveBeenCalledWith(["(genres = (12)) & game_type = (0)"]);
+    });
+
+    it("faz sorteios simultâneos esperarem a mesma contagem em vez de repeti-la", async () => {
+        vi.mocked(countGamesMatching).mockResolvedValueOnce([7]);
+        const countAnswers = createAnswerCounter(CONTEXT);
+
+        const counts = await Promise.all([countAnswers([[RPG]]), countAnswers([[RPG]])]);
+
+        expect(counts).toEqual([[7], [7]]);
+        expect(countGamesMatching).toHaveBeenCalledTimes(1);
+    });
+
+    it("não guarda em cache a contagem que falhou", async () => {
+        vi.mocked(countGamesMatching).mockRejectedValueOnce(new Error("IGDB fora")).mockResolvedValueOnce([7]);
+        const countAnswers = createAnswerCounter(CONTEXT);
+
+        await expect(countAnswers([[RPG]])).rejects.toThrow("IGDB fora");
+        await expect(countAnswers([[RPG]])).resolves.toEqual([7]);
+    });
+
+    it("conta de novo o prêmio quando os vencedores no banco mudam", async () => {
+        vi.mocked(countGamesMatching).mockResolvedValueOnce([1]).mockResolvedValueOnce([2]);
+        const withNewWinner = { awardWinnerIds: new Map([["Game Of The Year", [1942, 119133]]]) };
+
+        await createAnswerCounter(CONTEXT)([[GOTY]]);
+        const counts = await createAnswerCounter(withNewWinner)([[GOTY]]);
+
+        expect(counts).toEqual([2]);
+        expect(countGamesMatching).toHaveBeenLastCalledWith([
+            "((id = (1942,119133) | version_parent = (1942,119133))) & game_type = (0)",
+        ]);
     });
 });
 
