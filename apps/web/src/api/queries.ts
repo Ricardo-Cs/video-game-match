@@ -1,7 +1,10 @@
 import type { CreateGuessInput } from '@vgm/contracts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { ApiError } from '@/api/client';
 import { getRound, searchGames, startRound, submitGuess } from '@/api/game';
+
+const HTTP_CONFLICT = 409;
 
 export const gameKeys = {
   all: ['game'] as const,
@@ -45,11 +48,19 @@ export function useRoundQuery(roundId: string) {
   });
 }
 
+// 409 quer dizer que a rodada mudou por fora (outra aba, palpite repetido): a grade em cache está velha
+export function isStaleRoundError(error: Error): boolean {
+  return error instanceof ApiError && error.status === HTTP_CONFLICT;
+}
+
 export function useSubmitGuessMutation(roundId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (guess: CreateGuessInput) => submitGuess(roundId, guess),
     onSuccess: ({ round }) => queryClient.setQueryData(roundKeys.detail(roundId), round),
+    onError: (error) => {
+      if (isStaleRoundError(error)) queryClient.invalidateQueries({ queryKey: roundKeys.detail(roundId) });
+    },
   });
 }
